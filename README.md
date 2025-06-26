@@ -1,13 +1,5 @@
 # Oreon Build System
 
-[**Project Page**](https://github.com/oreonproject/oreon-build-system) |
-[**Report a Bug**](https://github.com/oreonproject/oreon-build-system/issues) |
-[**Oreon Linux**](https://oreonproject.org)
-
-Oreon Build System is a modern, automated web-based build platform for creating RPM packages and complete ISO images for Oreon Linux. It provides a sleek, user-friendly interface for building packages, managing repositories, and generating custom Linux distributions.
-
-![Oreon Build System Workflow](doc/img/oreon-workflow.png)
-
 ## Features
 
 - **Modern Web UI**: Sleek, responsive interface with glass morphism design
@@ -72,17 +64,4 @@ Licensed under the GPL v2+ - see the [LICENSE](LICENSE) file for details.
 
 ## Community
 
-- **Forum**: [forum.oreonproject.org](https://forums.oreonproject.org)
-- **Documentation**: [docs.oreonproject.org](https://docs.oreonproject.org)
-
-## Status
-
-| Component | Status | Documentation |
-|-----------|--------|---------------|
-| Frontend | [![Build Status](https://ci.oreonproject.org/oreon-build-system/frontend/badge.svg)](https://ci.oreonproject.org/oreon-build-system/frontend/) | [![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.oreonproject.org/build-system/frontend/) |
-| Backend | [![Build Status](https://ci.oreonproject.org/oreon-build-system/backend/badge.svg)](https://ci.oreonproject.org/oreon-build-system/backend/) | [![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.oreonproject.org/build-system/backend/) |
-| CLI Tools | [![Build Status](https://ci.oreonproject.org/oreon-build-system/cli/badge.svg)](https://ci.oreonproject.org/oreon-build-system/cli/) | [![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://docs.oreonproject.org/build-system/cli/) |
-
----
-
-*Oreon Build System - Building the future of Linux distributions*
+- **Forum**: [forums.oreonproject.org](https://forums.oreonproject.org)
