@@ -14,7 +14,7 @@
 ### Using Docker (Recommended)
 
 ```bash
-git clone https://github.com/oreonproject/oreon-build-system.git
+git clone https://github.com/oreonproject/build-system.git
 cd oreon-build-system
 docker-compose up -d
 ```
