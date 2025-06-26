@@ -1,0 +1,24 @@
+Flask
+Flask-OpenID
+Flask-SQLAlchemy
+Flask-Session
+Flask-WTF
+flask-whooshee
+pytest
+pytest-cov
+blinker
+pytz
+markdown
+markupsafe
+pyLibravatar
+pydns # pyLibravatar uses this
+python-dateutil
+netaddr
+alembic
+redis
+python-openid-teams
+requests
+psycopg2
+decorator
+flexmock
+mock

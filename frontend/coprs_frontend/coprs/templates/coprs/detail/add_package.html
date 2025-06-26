@@ -1,0 +1,28 @@
+{% extends "coprs/detail.html" %}
+{% from "_helpers.html" import copr_name %}
+{% from "coprs/detail/_package_helpers.html" import show_navigation, show_package_form with context %}
+
+{% block title %}New package in {{ copr_name(copr) }}{% endblock %}
+{% set selected_tab = "packages" %}
+{%block project_breadcrumb %}
+  <li><a href="{{ copr_url('coprs_ns.copr_packages', copr) }}">Packages</a></li>
+  <li class="active">New</li>
+{%endblock%}
+
+{% block detail_body %}
+
+<h2 class="page-title">New Package</h2>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Select the source type - <a href="https://docs.pagure.org/copr.copr/user_documentation.html#build-source-types">Learn More</a></h3>
+  </div>
+  <div class="panel-body">
+    <ul class="nav nav-tabs nav-tabs-pf">
+      {{ show_navigation(copr, 'coprs_ns.copr_add_package') }}
+    </ul>
+  </div>
+</div>
+
+{{ show_package_form(source_type_text, package) }}
+{% endblock %}

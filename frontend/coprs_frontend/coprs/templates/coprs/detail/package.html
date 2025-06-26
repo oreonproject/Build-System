@@ -1,0 +1,127 @@
+{% extends "coprs/detail.html" %}
+{% from "_helpers.html" import copr_url, copr_name %}
+{% from "coprs/detail/_describe_source.html" import describe_source %}
+{% from "coprs/detail/_package_table.html" import package_table with context %}
+{% from "coprs/detail/_package_forms.html" import copr_package_delete_form %}
+
+{% block title %}Package {{ package.name }} in {{ copr_name(package.copr) }}{% endblock %}
+{% set selected_tab = "packages" %}
+{%block project_breadcrumb %}
+
+<li>
+  <a href="{{ copr_url('coprs_ns.copr_packages', copr) }}">Packages</a>
+</li>
+
+<li class="active">
+  {{package.name}}
+</li>
+{%endblock%}
+
+{% block detail_body %}
+
+{% if g.user and g.user.can_edit(copr) %}
+{{ copr_package_delete_form(package, page, class="pull-right button-build-action") }}
+<a class="btn btn-default pull-right button-build-action" href="{{ copr_url('coprs_ns.copr_rebuild_package', copr, package_name=package.name) }}">
+  <span class="pficon pficon-restart"></span> Rebuild
+</a>
+{% endif %}
+
+<h2 class="page-title"> Package: {{ package.name }} </h2>
+
+<div class="row">
+  <div class="col-sm-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">General Information</h3>
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+
+          {% if package.dist_git_url %}
+          <dt> Dist Git Repo:</dt>
+          <dd>
+            <a href="{{package.dist_git_url}}">
+            {{package.dist_git_repo}}
+            </a>
+          </dd>
+          {% endif %}
+
+          {% if package.webhook_rebuild %}
+          <dt>Webhook rebuild:</dt>
+          <dd>Yes</dd>
+          {% endif %}
+
+          {% if package.max_builds %}
+          <dt>Max builds:</dt>
+          <dd>{{ package.max_builds }}</dd>
+          {% endif %}
+
+          {% if package.timeout %}
+          <dt>Timeout:</dt>
+          <dd>{{ package.timeout|natural_time_delta() }}</dd>
+          {% endif %}
+
+          {% if package.chroot_denylist_raw %}
+          <dt>Excluded chroots:</dt>
+          <dd>{{ package.chroot_denylist_raw }}</dd>
+          {% endif %}
+
+          {% if package.chroots | length != package.copr.active_chroots | list | length %}
+          <dt>Built only for:</dt>
+          <dd>
+            {% for chroot in package.chroots %}
+            {{ chroot.name }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+          </dd>
+          {% endif %}
+
+        </dl>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading clearfix panel-heading-buttons">
+        <h3 class="panel-title pull-left">Default Build Source</h3>
+        {% if g.user and g.user.can_edit(copr) %}
+        <div class="btn-group pull-right">
+          <a class="btn btn-default btn-sm" href="{{ copr_url('coprs_ns.copr_edit_package', copr, package_name=package.name) }}">
+            <span class="pficon pficon-edit"></span> Edit
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+          <dd>
+            {{ describe_source(package.source_type_text, package.source_json_dict, is_package=True) }}
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    {{package_table(package.builds)}}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Status Badge</h3>
+      </div>
+      <div class="panel-body">
+        <dl class="dl-horizontal">
+          <dt> HTML Code: </dt>
+          <dd>
+            <textarea class="form-control" rows="2" cols="50"><a href="{{ copr_url('coprs_ns.copr_package', copr, package_name=package.name, _external=True) }}"><img src="{{ copr_url('coprs_ns.copr_package_icon', copr, package_name=package.name, _external=True) }}" /></a></textarea>
+          </dd>
+        </dl>
+        <dl class="dl-horizontal">
+          <dt> Markdown Code: </dt>
+          <dd>
+            <textarea class="form-control" rows="2" cols="50">[![Copr build status]({{ copr_url('coprs_ns.copr_package_icon', copr, package_name=package.name, _external=True) }})]({{ copr_url('coprs_ns.copr_package', copr, package_name=package.name, _external=True) }})</textarea>
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

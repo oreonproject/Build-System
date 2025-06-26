@@ -1,0 +1,64 @@
+{% extends "status.html" %}
+{% block title %} Statistics - Copr {% endblock %}
+{% from "_helpers.html" import build_href, copr_name, copr_details_href %}
+{% block stats_selected %}active{% endblock %}
+{%block status_breadcrumb %}
+<li class="active">
+  Statistics
+</li>
+{%endblock%}
+{% block status_body %}
+<noscript>
+This page uses JavaScript to show graphs of Copr utilization.
+</noscript>
+<div id="graphs" class="hidden">
+  <div class="row">
+    <h3>Builds during last 24 hours</h3>
+    <div id="chartDay" class="line-chart-pf"></div>
+  </div>
+  <div class="row">
+    <h3>Builds during last 90 days</h3>
+      <div id="chartNinetyDays" class="line-chart-pf"></div>
+  </div>
+  <div class="row">
+    <h3>Number of users that submitted at least one build in past 30 days.</h3>
+  </div>
+  <div class="row">
+      <h4>{{ users_in_past_month }}</h4>
+  </div>
+  <div class="row">
+    <h3>Builds divided by chroots</h3>
+  </div>
+  <div class="row">
+      <h4>During last 24 hours</h4>
+      <div id="chartChrootsDay"></div>
+  </div>
+  <div class="row">
+      <h4>During last 90 days</h4>
+      <div id="chartChrootsNinetyDays"></div>
+  </div>
+  <div class="row">
+    <h2>Actions</h2>
+    <p>Actions are nearly instant tasks. E.g., create GPG key for project, delete project, delete build, fork projects... They are usually executed within a second. If the number of action starts to grow, it usually indicate some malfuction.
+    </p>
+    <h3>Actions during last 24 hours</h3>
+      <div id="chartActionsDay" class="line-chart-pf"></div>
+    <h3>Actions during last 90 days</h3>
+      <div id="chartActionsNinetyDays" class="line-chart-pf"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script src="{{ url_for('static', filename='components/c3/c3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='components/d3/d3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphs.js') }}"></script>
+<script>
+  lineGraph({{ data1|tojson }}, 25, "#chartDay", "%H:%M");
+  lineGraph({{ data2|tojson }}, 15, "#chartNinetyDays", "%Y-%m-%d");
+  lineGraph({{ actions1|tojson }}, 25, "#chartActionsDay", "%H:%M");
+  lineGraph({{ actions2|tojson }}, 15, "#chartActionsNinetyDays", "%Y-%m-%d");
+  chrootGraph({{ chroots1|tojson }}, "#chartChrootsDay");
+  chrootGraph({{ chroots2|tojson }}, "#chartChrootsNinetyDays");
+</script>
+{% endblock %}

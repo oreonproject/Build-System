@@ -1,0 +1,104 @@
+{% extends "coprs/detail/settings.html" %}
+
+{% from "_helpers.html" import render_field, render_form_errors, copr_url, initialize_datatables %}
+
+{% set selected_monitor_tab = "integrations" %}
+{%block settings_breadcrumb %}Integrations{% endblock %}
+
+{% block tab_content %}
+
+<div class="row">
+    <div class="col-sm-8 col-md-9">
+        <h2> Integrations </h2>
+
+        For detailed information, please see <a href="https://docs.pagure.org/copr.copr/user_documentation.html#webhooks">the docs</a>.
+
+        <h3> Pagure </h3>
+        <ol>
+          <li> Activate Fedmsg in section 'Hooks' in the Pagure project settings. </li>
+        </ol>
+
+        <p> Don’t get confused by “Activate fedmsg notifications” in the “Project options” section: That’s only for Pagure UI-related actions. Scroll down until you reach the “Hooks” section. </p>
+
+        <p> To enable commit and pull request flagging, enter a Pagure public clone repo URL and an associated API key below. To create a new key, go to your Pagure project settings and find section "API keys". </p>
+
+        <form action="{{ copr_url('coprs_ns.copr_integrations_update', copr) }}" method="post" class="form-horizontal">
+            {{ pagure_form.csrf_token }}
+            <div class="form-group">
+              <div class="col-sm-12" style="margin-bottom: 10px">
+                  <input class="form-control" id="repo_url" name="repo_url" placeholder="Enter Pagure public clone URL." value="{{ pagure_form.repo_url.data}}" type="text">
+              </div>
+              <div class="col-sm-12">
+                  <input class="form-control" id="api_key" name="api_key" placeholder="Enter Pagure API key." value="{{ pagure_form.api_key.data}}" type="text">
+              </div>
+            </div>
+            <input class="btn btn-primary" type="submit" name="submit" value="Submit">
+        </form>
+        {{ render_form_errors(pagure_form) }}
+
+        <h3> Github </h3>
+        <div class="well well-sm">
+            {{ github_url }}
+        </div>
+        <div class="well well-sm">
+            {{ github_url }}&ltPKG_NAME&gt/
+        </div>
+
+        <h3> Gitlab </h3>
+        <div class="well well-sm">
+            {{ gitlab_url }}
+        </div>
+        <div class="well well-sm">
+            {{ gitlab_url }}&ltPKG_NAME&gt/
+        </div>
+
+        <h3> Bitbucket </h3>
+        <div class="well well-sm">
+            {{ bitbucket_url }}
+        </div>
+        <div class="well well-sm">
+            {{ bitbucket_url }}&ltPKG_NAME&gt/
+        </div>
+
+        <h3> Custom webhook(s) </h3>
+        <div class="well well-sm">
+            {{ custom_url }}
+        </div>
+        <div class="well well-sm">
+            {{ custom_dir_url }}
+        </div>
+
+        <h3>Webhook History</h3>
+        <div>
+            {% if webhook_history %}
+            <table class="datatable dataTable table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>Timstamp</th>
+                    <th>Forge-generated Webhook UUID</th>
+                    <th>User Agent</th>
+                  </tr>
+                </thead>
+                {% for webhook in webhook_history %}
+                <tr>
+                    <td  class="webhook_timestamp" data-toggle="tooltip" title="{{webhook.created_on|localized_time(g.user.timezone)}}">{{webhook.created_on|localized_time(g.user.timezone)}} ({{webhook.created_on|time_ago()}} ago)</td>
+                    <td>{% if webhook.webhook_uuid is none %} No UUID received
+                        {% else %}{{ webhook.webhook_uuid }}
+                        {% endif %}
+                   </td>
+                    <td>{% if webhook.user_agent is none %} Not Set 
+                        {% else %} {{webhook.user_agent}}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+                <p>No webhook received recently.</p>
+            {% endif %}
+            {{initialize_datatables(order="desc")}}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

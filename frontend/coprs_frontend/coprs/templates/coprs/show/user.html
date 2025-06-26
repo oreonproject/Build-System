@@ -1,0 +1,53 @@
+{% extends "coprs/show.html" %}
+{% block title %}Project List{% endblock %}
+{% block header %}Project List{% endblock %}
+{% from "_helpers.html" import render_pagination, projects_header %}
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li>
+    <a href="{{ url_for('coprs_ns.coprs_show') }}">Home</a>
+  </li>
+  <li class="active">
+    {{user.name}}
+  </li>
+</ol>
+{% endblock %}
+
+
+{% block show_top %}
+<div id="profile">
+  <img src="{{ user.gravatar_url }}" alt="User Image" class="avatar">
+  <h1>{{user.name|capitalize}}'s Profile</h1>
+  <p>
+      {% if g.user %}
+        <a href="mailto:{{ user.mail }}" title="{{ user.mail }}">{{ user.mail }}</a> |
+      {% endif %}
+
+      <a href="{{ config.LOGIN_INFO.user_link.format(username=user.name)}}">
+        {{ user.name }}
+        {% if config.LOGIN_INFO.user_desc %}
+        ({{ config.LOGIN_INFO.user_desc }})
+        {% endif %}
+      </a>
+
+      {% if g.user %}
+      | <a href="{{ url_for('user_ns.user_info') }}">User Info</a>
+      {% endif %}
+
+      {% if g.user.name == user.name %}
+        | <a href="{{ url_for('user_ns.repositories') }}">Outdated repositories</a>
+      {% endif %}
+
+      {% include "user_meta.html" %}
+  </p>
+</div>
+{% endblock %}
+
+
+{% block projects_header %}
+{% if g.user == user %}
+{{ projects_header() }}
+{% endif %}
+
+<h2 class="page-title">{{user.name|capitalize}}'s Projects</h2>
+{% endblock %}

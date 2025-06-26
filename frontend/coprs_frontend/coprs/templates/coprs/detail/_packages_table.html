@@ -1,0 +1,86 @@
+{% from "_helpers.html" import copr_url, build_state, initialize_datatables, serverside_pagination_warning %}
+{% from "_helpers.html" import pagination_form with context %}
+{% from "coprs/detail/_build_states.html" import build_states %}
+
+{% macro packages_table(packages, serverside_pagination=None) %}
+{% if not serverside_pagination %}
+<noscript><p>WARNING!! This page is using JavaScript to filter, sort and delete builds from the table.</p></noscript>
+{% else %}
+{{ serverside_pagination_warning() }}
+{% endif %}
+{% if packages %}
+  <table class="datatable dataTable table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Last Build Version</th>
+        <th>Last Build Submitted</th>
+        <th>Last Build Status</th>
+        <th>Automatic Build</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {# packages here is not a package object #}
+    {% for package in packages %}
+      {% if package.latest_build %}
+        {% set pkg_version = package.latest_build.pkg_version %}
+        {% set submitted_on = package.latest_build.submitted_on %}
+      {% endif %}
+      <tr>
+        <td data-order="{{ package.name }}">
+          <b><a href="{{ copr_url('coprs_ns.copr_package', copr, package_name=package.name) }}">{{ package.name }}</a></b>
+        </td>
+
+        <td data-order="{{ pkg_version }}">
+            {{ pkg_version or '-' }}
+        </td>
+
+        <td data-order="{{ submitted_on or 0 }}">
+          {% if submitted_on %}
+            {{ submitted_on | time_ago() }} ago
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td>
+          {% if package.latest_build %}
+            {{ build_state(package.latest_build) }}
+          {% else %}
+            not built yet
+          {% endif %}
+        </td>
+
+        <td data-order="{{ package.webhook_rebuild }}">
+            {% if package.webhook_rebuild %}
+              Enabled
+            {% else %}
+              Disabled
+            {% endif %}
+        </td>
+
+        <td>
+          {% if g.user and g.user.can_build_in(copr) %}
+          <a class="btn btn-default btn-sm"
+             href="{{ copr_url('coprs_ns.copr_rebuild_package', copr, package_name=package.name) }}">
+            <span class="pficon pficon-restart"></span> Rebuild
+          </a>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <h3>No packages so far</h3>
+{% endif %}
+
+{% if not serverside_pagination %}
+{{ initialize_datatables(order="asc") }}
+{% else %}
+{{ pagination_form(serverside_pagination) }}
+{% endif %}
+{{ build_states() }}
+{% endmacro %}

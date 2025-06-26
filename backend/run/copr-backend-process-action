@@ -1,0 +1,55 @@
+#! /usr/bin/python3
+
+"""
+Process one Action task provided by frontend (on backend).
+"""
+
+from copr_common.enums import BackendResultEnum
+
+from copr_backend.background_worker import BackendBackgroundWorker
+from copr_backend.actions import Action
+
+
+class ActionBackgroundWorker(BackendBackgroundWorker):
+    redis_logger_id = 'actions'
+
+    @classmethod
+    def adjust_arg_parser(cls, parser):
+        parser.add_argument(
+            "--task-id",
+            type=int,
+            required=True,
+            help="task ID to process",
+        )
+
+    def handle_action(self, action_id):
+        self.log.info("Handling action %s", action_id)
+        result = BackendResultEnum("failure")
+        resp = self.frontend_client.get('action/{}'.format(action_id))
+        if resp.status_code != 200:
+            self.log.error("failed to download task, apache code %s",
+                           resp.status_code)
+            return result
+        action_task = resp.json()
+        action = Action.create_from(self.opts, action_task, log=self.log)
+        try:
+            self.log.info("Executing: %s", str(action))
+            result = action.run()
+        except Exception:
+            self.log.exception("action failed for unknown error")
+        return result
+
+    def handle_task(self):
+        result = BackendResultEnum("failure")
+        action_id = self.args.task_id
+        try:
+            result = self.handle_action(action_id)
+        finally:
+            self.log.info("Action %s ended with status=%s", action_id,
+                          BackendResultEnum(int(result)))
+            self.redis_set_worker_flag('status', str(result))
+
+
+if __name__ == "__main__":
+    worker = ActionBackgroundWorker()
+    worker.process()

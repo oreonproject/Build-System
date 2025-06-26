@@ -1,0 +1,262 @@
+{% from "_helpers.html" import render_field, render_checkbox_field,
+render_form_errors, copr_details_href, copr_url, render_dropdown_field,
+render_bootstrap_options %}
+
+{% macro copr_form(form, view, copr = None, username = None, group = None, comments = None) %}
+  {# if using for updating, we need to pass name to url_for, but otherwise we need to pass nothing #}
+
+  {{ render_form_errors(form) }}
+
+  <form action="
+    {% if copr %}
+        {{ copr_url(view, copr) }}
+    {% elif group %}
+        {{ url_for(view, group_name = group.name) }}
+    {% elif username %}
+        {{ url_for(view, username = username) }}
+    {% else %}
+        {{ url_for(view) }}
+    {% endif %}" method="post" class="form-horizontal">
+
+    {{ form.csrf_token }}
+    {{ render_field(form.id, hidden = True) }}
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ counter('instructions') }}. Project information</h3>
+    </div>
+    <div class="panel-body">
+
+    {% if group %}
+        <input type="hidden" name="group_id" value="{{ group.id }}" />
+    {% endif %}
+
+    {% if copr is none %}
+      {{ render_field(form.name, label='Project Name', required = True, class="required") }}
+
+    {% else %}
+      {{ render_field(form.name, hidden = True) }}
+      {{ render_field(form.name, label='Project Name', disabled = True) }}
+    {% endif %}
+
+    {{ render_field(form.description, rows=5, cols=50, placeholder='Optional - describe your project briefly.',
+          info='You can use <a href="http://daringfireball.net/projects/markdown/syntax">markdown syntax</a>, inline HTML is forbidden.') }}
+
+    {{ render_field(form.instructions, rows=5, cols=50, placeholder='Optional - describe how your project can be installed. Where users can report bugs and issues. Link to wiki is good as well.', info='You can use <a href="http://daringfireball.net/projects/markdown/syntax">markdown syntax</a>, inline HTML is forbidden.') }}
+
+    {{ render_field(form.homepage, label='Homepage', placeholder='Optional - project homepage') }}
+    {{ render_field(form.contact, label='Contact', placeholder='Optional - email address or contact url', info="Use e-mail address or a link to your issue tracker. This information will be shown publicly.") }}
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ counter('instructions')}}. Build options</h3>
+    </div>
+    <div class="panel-body">
+
+    {% if form.errors["chroots"] %}
+    <div class="form-group has-error">
+    {% else %}
+    <div class="form-group">
+    {% endif %}
+      <label class="col-sm-2 control-label" for="textInput-markup">
+        Chroots
+      </label>
+      <div class="col-sm-10">
+      {% for ch in form.chroots %}
+        <div class="checkbox">
+          <label>
+            {{ ch }}
+            {{ ch.label }}
+            {% set chrootname = ch.label.text %}
+            {% if copr and ch.data and ch.checked %}
+              <a style="margin-left:20px" class="btn btn-xs btn-default" href="{{ copr_url('coprs_ns.chroot_edit', copr, chrootname = chrootname)}}">
+                <span class="pficon pficon-edit"> Edit </span>
+              </a>
+            {% endif %}
+            {% if comments and comments[chrootname] %}
+              <small class="text-muted"> {{ comments[chrootname]|safe }} </small>
+            {% endif %}
+          </label>
+        </div>
+      {% endfor %}
+      {% if form.errors["chroots"] %}
+        <span class="help-block pficon pficon-warning-triangle-o"> {{ form.errors["chroots"] |join(". ") }}</span>
+      {% endif %}
+      </div>
+    </div>
+
+    {{ render_field(form.repos, rows=5, cols=50, placeholder='Optional - URL to additional yum repos, which can be used during build. Space separated. This should be baseurl from .repo file. E.g.: http://copr-be.cloud.fedoraproject.org/results/rhughes/f20-gnome-3-12/fedora-$releasever-$basearch/') }}
+
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="textInput-markup">
+      </label>
+      <div class="col-sm-10">
+        <small class="text-muted pficon pficon-info">
+          Available variables to expand (with example value):
+          <dd>
+            <ul>
+              <li><strong>$chroot</strong> (fedora-21-x86_64) </li>
+              <li><strong>$releasever</strong> (21) </li>
+              <li><strong>$basearch</strong> (x86_64)</li>
+              <li><strong>$distname</strong> (fedora) </li>
+            </ul>
+          </dd>
+        </small>
+        <br>
+        <small class="text-muted pficon pficon-info">
+          To reference another Copr use:
+          <ul>
+            <li><strong>copr://user/project</strong></li>
+          </ul>
+        </small>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+
+  {% if copr is none %}{# we're creating the copr, so display initial builds area #}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ counter('instructions') }}. (Optional) initial builds </h3>
+    </div>
+    <div class="panel-body">
+
+      {{ render_field(form.initial_pkgs, rows=5, cols=50, placeholder='Optional - list of src.rpm to build initially. Can be skipped and submitted later.') }}
+    </div>
+  </div>
+  {% endif %}
+
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ counter('instructions') }}. Other options</h3>
+    </div>
+    <div class="panel-body">
+
+    {{ render_checkbox_field(
+        "Booleans", [
+        [form.disable_createrepo],
+        [form.build_enable_net],
+        [form.auto_prune, g.user.admin],
+        [form.unlisted_on_hp],
+        [form.persistent, g.user.admin],
+        [form.follow_fedora_branching],
+        [form.multilib],
+        [form.module_hotfixes],
+        [form.fedora_review],
+        [form.appstream],
+    ])}}
+
+    {{ render_field(form.delete_after_days,
+            class="short-input-field",
+            placeholder='Optional',
+            info='Delete the project after the specfied period of time (empty = disabled)') }}
+
+    {{ render_field(form.repo_priority,
+        class="short-input-field",
+        placeholder='Optional',
+        info='Use the priority=&lt;INT&gt; config option for repositories in this project, see <a href="https://dnf.readthedocs.io/en/latest/conf_ref.html#repo-priority-label"><code>man dnf.conf(5)</code></a> for more info.') }}
+
+    {{ render_field(form.isolation, placeholder='default') }}
+
+    {{ render_bootstrap_options(form) }}
+
+    {{ render_field(form.runtime_dependencies, rows=5, cols=50, placeholder='Optional - URL to additional yum repos, which can be used as runtime dependencies. Space separated. This should be baseurl from .repo file. E.g.: http://copr-be.cloud.fedoraproject.org/results/rhughes/f20-gnome-3-12/fedora-$releasever-$basearch/') }}
+
+    {{ render_field(form.packit_forge_projects_allowed, rows=5, cols=50, placeholder='Optional - forge projects, which can build in this project via Packit. Space separated. E.g.: github.com/packit/ogr', info='These projects will be allowed to build in this project via Packit.') }}
+    </div>
+  </div>
+
+    <input class="btn btn-primary" type="submit" value="{% if copr %}Update{% else %}Create{% endif %}">
+  </form>
+{% endmacro %}
+
+{% macro copr_delete_form(form, copr) %}
+  <form class="form-horizontal" action="{{ copr_url('coprs_ns.copr_delete', copr) }}" method="post">
+      {{ form.csrf_token }}
+      {{ render_form_errors(form) }}
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="textInput-markup">
+        Answer
+      </label>
+      <div class="col-sm-10">
+        {{ form.verify(class="form-control") }}
+      </div>
+    </div>
+    <input class="btn btn-danger" type="submit" value="Delete the Project Forever">
+  </form>
+{% endmacro %}
+
+{% macro copr_permissions_form(form, copr, permissions) %}
+  {% if permissions %}
+    <form action="{{ url_for('coprs_ns.copr_update_permissions', username=copr.user.name, coprname=copr.name) }}" method=post>
+      {{ form.csrf_token }}
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Is Builder</th>
+            <th>Is Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for perm in permissions %}
+          <tr>
+            <td>{{ perm.user.name }}</td>
+            <td>
+              {{ perm.copr_builder|perm_type_from_num }}
+              {% if perm.copr_builder != 0 %}
+                {{ form['copr_builder_{0}'.format(perm.user.id)] }}
+              {% endif %}
+            </td>
+            <td>
+              {{ perm.copr_admin|perm_type_from_num }}
+              {% if perm.copr_admin != 0 %}
+                {{ form['copr_admin_{0}'.format(perm.user.id)] }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <dd><input type="submit" value="Save"></dd>
+    </form>
+  {% endif %}
+  {% endmacro %}
+
+{% macro copr_legal_flag_form(form, copr) %}
+<form class="legal-flag" method="post" action="{{ copr_url('coprs_ns.copr_legal_flag', copr) }}">
+  If you think that this project may be violating our policies, you can mark it for legal review.
+  You can add an optional comment describing what you think is wrong here.
+
+  <dl>
+    {{ render_field(form.comment, rows=5, cols=50) }}
+    <dt>
+      <input class="btn btn-danger" type="submit" value="Raise Legal Flag">
+      <a href="{{ copr_details_href(copr) }}" class="btn btn-default">Cancel</a>
+    </dt>
+  </dl>
+  </form>
+{% endmacro %}
+
+
+{% macro copr_fork_form(form, copr, confirm) %}
+<form method="post" action="">
+  {% if confirm %}
+    <div class="alert alert-warning" role="alert">
+      {{ form.confirm }} Please confirm that you want to fork into existing project: {{ form.owner.data }}/{{ form.name.data }}
+    </div>
+  {% endif %}
+
+  {{ render_field(form.source, disabled = True) }}
+  {{ render_field(form.source, hidden = True) }}
+  {{ render_field(form.owner) }}
+  {{ render_field(form.name, info="If you enter the name of your existing project, then only new packages and builds from source project will be forked into yours.") }}
+  {{ form.csrf_token }}
+  <input class="btn btn-primary pull-right" type="submit" value="Fork it">
+</form>
+{% endmacro %}

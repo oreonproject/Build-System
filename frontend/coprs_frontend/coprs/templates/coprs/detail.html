@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% from "_helpers.html" import copr_title, copr_url, render_crumb, copr_name, render_project_voting %}
+
+{% block title %}{{ copr_name(copr) }} Copr{% endblock %}
+{% block main_menu_projects %}active{% endblock %}
+
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  {{ render_crumb(url_for('coprs_ns.coprs_show'), 'Home') }}
+  {% if copr.is_a_group_project %}
+    {{ render_crumb(url_for('groups_ns.list_projects_by_group', group_name=copr.group.name), copr.group.at_name) }}
+  {% else %}
+    {{ render_crumb(url_for('coprs_ns.coprs_by_user', username=copr.user.name), copr.user.name)}}
+  {% endif %}
+  {{ render_crumb(copr_url('coprs_ns.copr_detail', copr), copr.name)}}
+
+  {%block project_breadcrumb %}
+  {%endblock%}
+</ol>
+{%endblock%}
+
+{% block body scoped %}
+
+{% if copr.forked_from and copr.still_forking %}
+  {{ alert('Forked project is still being prepared for you. It may take a few minutes to duplicate backend data.', 'warning') }}
+{% endif %}
+
+
+<div class="clearfix">
+  <!-- Upvote or downvote the project -->
+  {{ render_project_voting(copr) }}
+
+  <!-- PROJECT NAME -->
+  <div style="margin-bottom:22px;margin-top:22px">
+    <h1 class="project-name" style="display:inline;">{{ copr_title(copr) }}</h1>
+    {% if copr.delete_after %}
+    <small><i>temporary project: {{ copr.delete_after_msg }}</i></small>
+    {% endif %}
+    {% if copr.forked_from %}
+    <small><i>( forked from {{ copr_title(copr.forked_from) }})</i></small>
+    {% endif %}
+    <p class="text-muted">Project ID: {{ copr.id }}</p>
+  </div>
+
+
+  {% macro nav_element(tab_name, tab_title, icon,  href) %}
+  <li class="{% if selected_tab == tab_name %}active{% endif %}">
+    <a href="{{ href }}"> <span class="{{icon}}"></span>{% if "pficon" not in icon %}&nbsp;{%endif%}
+      {{ tab_title }}
+    </a>
+  </li>
+  {% endmacro %}
+</div>
+
+
+<!-- MENU -->
+<ul class="nav nav-tabs">
+
+    {{ nav_element("overview", "Overview", "fa fa-home", copr_url('coprs_ns.copr_detail', copr)) }}
+    {{ nav_element("packages", "Packages", "fa fa-archive", copr_url('coprs_ns.copr_packages', copr)) }}
+    {{ nav_element("builds", "Builds", "fa fa-tasks", copr_url('coprs_ns.copr_builds', copr)) }}
+    {{ nav_element("modules", "Modules", "fa fa-rocket",  copr_url('coprs_ns.copr_modules', copr)) }}
+    {{ nav_element("monitor", "Monitor", "fa fa-desktop", copr_url('coprs_ns.copr_build_monitor', copr)) }}
+
+    {% if g.user %}
+      {% set settings_view = 'coprs_ns.copr_edit' if g.user and g.user.can_edit(copr) else 'coprs_ns.copr_permissions' %}
+      {{ nav_element("settings", "Settings", "pficon pficon-settings",  copr_url(settings_view, copr)) }}
+    {% endif %}
+</ul>
+
+{% block detail_body %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "coprs/detail.html" %}
+{% block title %}Builds for {{ copr.full_name }}{% endblock %}
+
+{% from "_helpers.html" import render_pagination, serverside_pagination_warning %}
+{% from "coprs/detail/_builds_table.html" import builds_table with context %}
+{% from "coprs/detail/_build_states.html" import build_states %}
+{% from "coprs/detail/_builds_forms.html" import copr_delete_builds %}
+
+{% set selected_tab = "builds" %}
+
+{%block project_breadcrumb %}
+<li class="active">
+  Builds
+</li>
+{%endblock%}
+
+{% block detail_body %}
+{% if g.user and g.user.can_build_in(copr) %}
+  <a class="btn btn-primary button-new pull-right" style="margin-left:5px" href="{{ copr_url('coprs_ns.copr_add_build', copr) }}">
+    <span class="pficon pficon-add-circle-o"></span> New Build
+  </a>
+{% endif %}
+
+{% if g.user and g.user.can_edit(copr) %}
+  {% if builds %}
+    {{ copr_delete_builds(copr, class="pull-right button-build-action") }}
+  {% endif %}
+{% endif %}
+
+<h2 class="page-title">Project Builds</h2>
+  {% if copr.dirs|length > 1 %}
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <div class="btn-group" role="group">
+        <a href="{{ copr_url('coprs_ns.copr_builds', copr) }}" class="btn btn-default btn-sm {% if not current_dirname %}active{% endif %}">
+          all builds
+        </a>
+        {% for copr_dir_info in copr_dirs %}
+          {% set copr_dir = copr_dir_info.copr_dir %}
+            <a href="{{ copr_url('coprs_ns.copr_builds', copr) }}?dirname={{ copr_dir.name }}" class="btn btn-default btn-sm {% if current_dirname == copr_dir.name %}active{% endif %}"
+                {% if copr_dir_info.removal_candidate %}
+                    title="Will be removed in {{ copr_dir_info.remaining_days }} days if no other build is done here"
+                {% endif %}
+                {% if copr_dir_info.delete %}
+                    style="color: red;"
+                {% elif copr_dir_info.warn %}
+                    style="color: orange;"
+                {% endif %}
+            >
+                {{ copr_dir.name }}
+            </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if builds.items %}
+  {{ serverside_pagination_warning() }}
+  {{ builds_table(builds.items, serverside_pagination=builds) }}
+  {% else %}
+  {{ builds_table(builds) }}
+  {% endif %}
+
+{% endblock %}

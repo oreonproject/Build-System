@@ -1,0 +1,27 @@
+{% macro build_states() %}
+{% from "_helpers.html" import build_state_text %}
+    <dl class="aligned">
+        <div>
+            <details>
+            <summary style="display: list-item"> Possible build states</summary>
+            {% for state in [
+              "importing",
+              "pending",
+              "starting",
+              "running",
+              "succeeded",
+              "forked",
+              "skipped",
+              "failed",
+              "canceled",
+              "waiting",
+            ]%}
+                {{ build_state_text(state) }}
+                - {{state|build_state_description}}
+            <br />
+
+            {% endfor %}
+            </details>
+        </div>
+    </dl>
+{% endmacro %}

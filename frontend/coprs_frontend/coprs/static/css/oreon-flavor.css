@@ -1,0 +1,96 @@
+/* Oreon Build System - Flavor Overrides */
+
+/* Oreon Brand Colors */
+:root {
+  --oreon-brand-primary: #667eea;
+  --oreon-brand-secondary: #764ba2;
+  --oreon-brand-accent: #f093fb;
+}
+
+/* Override default brand colors throughout the application */
+.btn-primary {
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-secondary) 100%);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.4);
+}
+
+/* Navigation brand styling */
+.navbar-brand {
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Link colors */
+a {
+  color: var(--oreon-brand-primary);
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--oreon-brand-secondary);
+  text-decoration: none;
+}
+
+/* Progress bars */
+.progress-bar {
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-secondary) 100%);
+}
+
+/* Labels and badges */
+.label-primary,
+.badge-primary {
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-secondary) 100%);
+}
+
+/* Form focus states */
+.form-control:focus {
+  border-color: var(--oreon-brand-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Custom Oreon specific overrides */
+.oreon-gradient-text {
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.oreon-gradient-bg {
+  background: linear-gradient(135deg, var(--oreon-brand-primary) 0%, var(--oreon-brand-secondary) 100%);
+  color: white;
+}
+
+/* Override any remaining COPR-specific styling */
+.copr-specific {
+  display: none;
+}
+
+/* Modern scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--oreon-brand-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--oreon-brand-secondary);
+} 

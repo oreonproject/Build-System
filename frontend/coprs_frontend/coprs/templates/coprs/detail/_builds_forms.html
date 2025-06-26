@@ -1,0 +1,297 @@
+{% from "_helpers.html" import render_field, render_form_errors, copr_url, render_pypi_python_versions_field, render_additional_build_options, render_srpm_build_method_box with context %}
+{% from "coprs/detail/_method_forms.html" import copr_method_form_fileds_custom %}
+
+{# This file contains forms for the "New Build" action
+
+  General Form Helpers: (contain everything except build source)
+    - copr_build_form_begin
+    - copr_build_form_end
+
+  Specific Forms: (contain only build source)
+    - copr_build_form_url
+    - copr_build_form_upload
+
+  One Button Forms:
+    - copr_build_repeat_form
+    - copr_build_cancel_form
+    - copr_build_delete_form
+
+
+  How to create a Specific Form:
+    1. include copr_build_form_begin
+    2. render all the fields that specify the build source
+    3. include copr_build_form_end
+#}
+
+
+
+{#####  GENERAL FORM HELPERS  #####}
+
+{% macro copr_build_form_begin(form, view, copr, build=None, hide_panels=False) %}
+    {{ render_form_errors(form) }}
+    <form class="form-horizontal"
+          action="{% if not build %}
+            {{- copr_url(view, copr) -}}
+          {% else %}
+            {{- copr_url(view, copr, build_id=build.id) -}}
+          {% endif %}"
+          method="post" enctype="multipart/form-data">
+  {% if not hide_panels %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ counter('instructions') }}. Provide the source</h3>
+      </div>
+      <div class="panel-body">
+  {% endif %}
+{% endmacro %}
+
+
+{% macro copr_build_form_end(form, view, copr, hide_panels=False) %}
+  {% if not hide_panels %}
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ counter('instructions') }}. Select chroots and other options</h3>
+      </div>
+      <div class="panel-body">
+  {% endif %}
+  {{ render_additional_build_options(form, copr) }}
+  {% if not hide_panels %}
+      </div>
+    </div>
+  {% endif %}
+
+      <p>
+        You agree to build only <a href="https://docs.pagure.org/copr.copr/user_documentation.html#what-i-can-build-in-copr">allowed content</a> in Copr.
+        Check if your <a href="https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses">license</a> is allowed.
+      </p>
+
+      <input class="btn btn-primary" type="submit" value="Build">
+    </form>
+{% endmacro %}
+
+{% macro source_description(description) %}
+  <div class="form-group">
+    <label class="col-sm-2 control-label">
+      Source Description:
+    </label>
+    <div class="col-sm-10">
+      {{ description | safe }}
+    </div>
+  </div>
+{% endmacro %}
+
+
+
+{#####  SPECIFIC FORMS  #####}
+
+
+{% macro copr_build_form_url(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+    {{ source_description('Please upload your SRPM or .spec files on a public server and provide link(s) to the form below. This is the only option to submit more builds at once.')}}
+
+    {{ render_field(form.pkgs, label='URLs to files', rows = 10, cols = 50) }}
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_upload(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+      {{ source_description("Upload your SRPM or .spec directly to Copr.")}}
+
+      <div class="form-group">
+        <label class="col-sm-2 control-label" for="textInput-markup">
+        File:
+        </label>
+        <div class="col-sm-10">
+          {{ form.pkgs }}
+        </div>
+      </div>
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_scm(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+    {{ source_description('Build from Git or SVN repository. Please provide the Git or SVN URL.')}}
+
+    {{ render_field(form.scm_type) }}
+    {{ render_field(form.clone_url, placeholder="URL to your Git or SVN repository.") }}
+    {{ render_field(form.committish, placeholder="Optional - Specific branch, tag, or commit that you want to build.") }}
+    {{ render_field(form.subdirectory, placeholder="Optional - Subdirectory where source files and .spec are located.") }}
+    {{ render_field(form.spec, placeholder="Optional - Path to your .spec file under the specified subdirectory.") }}
+
+    {{ render_srpm_build_method_box(form) }}
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_distgit(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+  {{ source_description('Build package from a '
+                        '<a href="https://github.com/release-engineering/dist-git">DistGit</a>'
+                        ' repository' )}}
+
+  {{ render_field(form.package_name) }}
+  {{ render_field(form.distgit) }}
+  {{ render_field(form.committish) }}
+  {{ render_field(form.namespace) }}
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_pypi(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+    {{ source_description(
+         'This method uses '
+         '<a href="https://github.com/fedora-python/pyp2rpm">pyp2rpm</a> '
+         'or <a href="https://github.com/befeleme/pyp2spec">pyp2spec</a> '
+         'to create the RPM for you automatically from PyPI - '
+         'the Python Package Index. Please provide the package name.'
+       )
+    }}
+
+    {{ render_field(form.pypi_package_name, placeholder="Package name in the Python Package Index.") }}
+    {{ render_field(form.pypi_package_version, placeholder="Optional - Version of the package PyPI") }}
+
+    {{ render_field(
+         form.spec_generator,
+         info="Tool for generating specfile from a PyPI package. The options "
+               "are full-featured <strong>pyp2rpm</strong> with cross "
+               "distribution support, and <strong>pyp2spec</strong> that is "
+               "being actively developed and considered to be the future."
+       )
+    }}
+
+    {# End the previous instructions box #}
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          {{ counter('instructions') }}. Options specific for pyp2rpm
+        </h3>
+      </div>
+      <div class="panel-body">
+        {{ render_field(
+               form.spec_template,
+               placeholder="Distribution specific spec template",
+               info="Limited to <strong>pyp2rpm</strong> spec generator")
+        }}
+
+        {{ render_pypi_python_versions_field(form.python_versions) }}
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_rubygems(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+
+    {{ source_description('This method uses <a href="https://github.com/fedora-ruby/gem2rpm">gem2rpm</a> to create the RPM for you automatically from RubyGems.org. Please provide the gem name.')}}
+
+    {{ render_field(form.gem_name, placeholder="Gem name from RubyGems.org") }}
+
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_custom(form, view, copr) %}
+  {{ copr_build_form_begin(form, view, copr) }}
+  {{ source_description('Provide custom script to build sources.')}}
+  {{ copr_method_form_fileds_custom(form) }}
+  {{ copr_build_form_end(form, view, copr) }}
+{% endmacro %}
+
+
+{% macro copr_build_form_rebuild(form, view, copr, build, allow_user_ssh) %}
+  {{ copr_build_form_begin(form, view, copr, build, hide_panels=True) }}
+
+  {% if allow_user_ssh %}
+    <h3>SSH access to the builder</h3>
+    <input type="hidden" name="allow_user_ssh" value="{{ allow_user_ssh }}">
+    {{ render_field(form.ssh_public_keys, label='Public SSH keys',
+                    placeholder='Newline separated public SSH keys, e.g. ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDR+QU9...',
+                    rows=8, cols=50) }}
+  {% endif %}
+
+  <h3> New Build Options </h3>
+  {{ copr_build_form_end(form, view, copr, hide_panels=True) }}
+{% endmacro %}
+
+
+{% macro copr_build_cancel_form(build, page, class="") %}
+  {% if build.cancelable %}
+    <form class="{{class}}" action="{{ copr_url('coprs_ns.copr_cancel_build', build.copr, build_id=build.id) }}" method="post">
+      <input type="hidden" value="page" value="{{ page }}">
+      <button class="btn btn-default" type="submit">
+        <span class="pficon pficon-close"></span> Cancel
+      </button>
+    </form>
+  {% endif %}
+{% endmacro %}
+
+{% macro copr_build_repeat_form(build, page, class="") %}
+    <form class="{{class}}" action="{{ copr_url('coprs_ns.copr_repeat_build', build.copr, build_id=build.id) }}" method="post">
+      <input type="hidden" value="page" value="{{ page }}">
+      <button class="btn btn-default" type="submit">
+        <span class="pficon pficon-restart"></span> Resubmit
+      </button>
+    </form>
+{% endmacro %}
+
+{# TODO Refactor, all of the forms are the same #}
+{% macro copr_resubmit_allow_user_ssh_form(build, page, class="") %}
+    <form class="{{class}}" action="{{ copr_url('coprs_ns.copr_repeat_build_ssh', build.copr, build_id=build.id) }}" method="post">
+      <input type="hidden" value="page" value="{{ page }}">
+      <button class="btn btn-default" type="submit">
+        <span class="pficon pficon-restart"></span> Resubmit and allow SSH
+      </button>
+    </form>
+{% endmacro %}
+
+{% macro copr_build_delete_form(build, page, class="") %}
+  <form class="{{class}}" action="{{ url_for('coprs_ns.copr_delete_build', username=build.copr.user.name, coprname=build.copr.name, build_id=build.id)}}" method="post">
+    <input type="hidden" value="page" value="{{ page }}">
+    <button class="btn btn-danger" type="submit">
+      <span class="pficon pficon-delete"></span> Delete
+    </button>
+  </form>
+{% endmacro %}
+
+{% macro copr_delete_builds(copr, class="") %}
+  <form class="{{ class }} delete-builds show-me-javascript hidden" action="#" method="post">
+    <button class="btn btn-danger" type="submit">
+      <span class="pficon pficon-delete"></span> Delete all marked
+    </button>
+  </form>
+
+  <script>
+    $('form.delete-builds').submit(function(event) {
+      var build_ids = [];
+      $('tr.build-row :checkbox[name=build_ids]:checked').each(function() {
+        build_ids.push(this.value);
+      });
+
+      if (!confirm('Are you sure, you want to delete ' + build_ids.length + ' builds from your copr?')) {
+        return false;
+      }
+
+      $.post("{{ copr_url('coprs_ns.copr_delete_builds', copr) }}", {"build_ids": build_ids}, function() {
+        $(location).attr('href', '{{ copr_url('coprs_ns.copr_builds', copr) }}');
+      });
+      return false;
+  });
+  </script>
+{% endmacro %}

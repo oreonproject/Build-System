@@ -1,0 +1,49 @@
+{% extends "coprs/detail.html" %}
+{% from "_helpers.html" import copr_url, copr_name %}
+{% block title %}Adding Build for {{ copr_name(copr) }}{% endblock %}
+
+{% set selected_tab = "builds" %}
+
+{%block project_breadcrumb %}
+  {% if package %}
+    <li><a href="{{ copr_url('coprs_ns.copr_packages', copr) }}">Packages</a></li>
+    <li><a href="{{ copr_url('coprs_ns.copr_package', copr, package_name=package.name) }}">{{ package.name }}</a></li>
+    <li><a href="{{ copr_url('coprs_ns.copr_rebuild_package', copr, package_name=package.name) }}">Rebuild</a></li>
+  {% else %}
+    <li><a href="{{ copr_url('coprs_ns.copr_builds', copr) }}">Builds</a></li>
+    <li>New Build</li>
+  {% endif %}
+{%endblock%}
+
+{% block detail_body %}
+
+{% macro nav_element(tab_name, tab_title, href) %}
+<li class="{% if add_build_tab == tab_name %}active{% endif %}">
+  <a href="{{ href }}">
+    {{ tab_title }}
+  </a>
+</li>
+{% endmacro %}
+
+<h2 class="page-title"> New Build </h2>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">{{ counter('instructions') }}. Select the source type - <a href="https://docs.pagure.org/copr.copr/user_documentation.html#build-source-types">Learn More</a></h3>
+  </div>
+  <div class="panel-body">
+    <ul class="nav nav-tabs nav-tabs-pf">
+      {{ nav_element("url", "From URLs", copr_url('coprs_ns.copr_add_build', copr)) }}
+      {{ nav_element("upload", "Upload", copr_url('coprs_ns.copr_add_build_upload', copr)) }}
+      {{ nav_element("scm", "SCM", copr_url('coprs_ns.copr_add_build_scm', copr)) }}
+      {{ nav_element("distgit", "DistGit", copr_url('coprs_ns.copr_add_build_distgit', copr)) }}
+      {{ nav_element("pypi", "PyPI", copr_url('coprs_ns.copr_add_build_pypi', copr)) }}
+      {{ nav_element("rubygems", "RubyGems", copr_url('coprs_ns.copr_add_build_rubygems', copr)) }}
+      {{ nav_element("custom", "Custom", copr_url('coprs_ns.copr_add_build_custom', copr)) }}
+    </ul>
+  </div>
+</div>
+
+{% block build_form %}{% endblock %}
+
+{% endblock %}

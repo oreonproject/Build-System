@@ -1,0 +1,44 @@
+*.pyc
+*.pyo
+*.swp
+.coverage
+frontend/data/
+frontend/dump.rdb
+*/dist/
+build/
+_build/
+python-doc/
+*.egg-info
+documentation/build
+documentation/python-doc
+_venv/
+_report/
+_tmp/
+.cache/
+.pytest_cache/
+.localwrap/
+.mypy_cache/
+
+backend/docs/build
+
+frontend/coprs_frontend/copr_frontend.log
+
+_redis.log
+
+# for vim "intellisense"
+.tags
+.cscope.out
+
+# IDE
+.idea
+
+.vagrant
+
+.DS_Store
+
+# Exuberant Ctags
+tags
+
+# External tearballs for unittesting.
+test-data-*.tar.gz
+test-data-*/

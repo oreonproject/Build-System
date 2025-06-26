@@ -1,0 +1,221 @@
+# Port-layout
+# ===========
+#
+# Rootless podman-compose doesn't allow us to start multiple containers in one
+# pod that listen on the same port.  Therefore we start httpd servers on ports
+# (host:pod):
+#   5000:5000 -- Frontend Apache (API/WebUI)
+#   5001:5001 -- DistGit Apache
+#   5002:5002 -- Backend Nginx
+#     --:5003 -- Keygen Apache (obtaining keys)
+#   5005:5000 -- Resalloc WebUI
+#
+# Other ports:
+#   5009:5432 -- PostgreSQL database
+
+# this should be dolved by python3-daemon >= 3.0.0
+# https://bugzilla.redhat.com/show_bug.cgi?id=2307635
+x-ulimits: &ulimits_settings
+  ulimits:
+    nproc: 65535
+    nofile:
+      soft: 32767
+      hard: 65535
+
+
+services:
+
+  # @TODO Probably not all backend services should use the same Dockerfile
+
+  backend-log:
+    build:
+      context: docker/backend
+    hostname: backend-log
+    command: "/usr/bin/copr_run_logger.py"
+    depends_on:
+      - redis
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - results:/var/lib/copr/public_html/results:z
+    <<: *ulimits_settings
+
+  backend-build:
+    build:
+      context: docker/backend
+    hostname: backend-build
+    command: ["/run-backend", "--sign-host", "keygen-signd", "/usr/bin/copr-run-dispatcher-backend", "builds"]
+    depends_on:
+      - resalloc
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - results:/var/lib/copr/public_html/results:z
+    <<: *ulimits_settings
+
+  backend-action:
+    build:
+      context: docker/backend
+    hostname: backend-action
+    command: ["/run-backend", "--sign-host", "keygen-signd", "/usr/bin/copr-run-dispatcher-backend", "actions"]
+    depends_on:
+      - resalloc
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - results:/var/lib/copr/public_html/results:z
+    <<: *ulimits_settings
+
+  resalloc:
+    build:
+      context: docker/resalloc
+    hostname: resalloc
+    depends_on:
+      - database
+    stdin_open: true
+    tty: true
+    volumes:
+      - resalloc:/persistent
+
+  resalloc-webui:
+    build:
+      context: docker/resalloc
+    hostname: resalloc-webui
+    depends_on:
+      - resalloc
+    command: python3 -c "from resallocwebui.app import app; app.run(host='0.0.0.0')"
+    stdin_open: true
+    tty: true
+    ports:
+      - "5005:5000"
+    volumes:
+      - resalloc:/persistent
+
+  redis:
+    image: centos/redis-32-centos7
+    hostname: redis
+    volumes:
+      - redis:/var/lib/redis/data
+
+  backend_httpd:
+    build:
+      context: docker/backend_httpd
+    hostname: backend_httpd
+    ports:
+      - "5002:5002"
+    volumes:
+      - results:/var/lib/copr/public_html/results:z
+
+  builder:
+    build:
+      context: docker/builder
+    hostname: builder
+    stdin_open: true
+    tty: true
+    privileged: true
+    volumes:
+      - .:/opt/copr:z
+
+  frontend:
+    build:
+      context: docker/frontend/
+    hostname: frontend
+    depends_on:
+      - database
+      - redis
+    stdin_open: true
+    tty: true
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/opt/copr:z
+
+  database:
+    build:
+      context: docker/database/
+    hostname: database
+    stdin_open: true
+    tty: true
+    environment:
+      - POSTGRESQL_USER=copr-fe
+      - POSTGRESQL_PASSWORD=coprpass
+      - POSTGRESQL_DATABASE=coprdb
+    ports:
+      - 5009:5432
+    volumes:
+      - database:/var/lib/pgsql/data
+
+  distgit:
+    build:
+      context: docker/distgit/
+    hostname: distgit
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - dist-git:/var/lib/dist-git:z
+    <<: *ulimits_settings
+
+  distgit-httpd:
+    build:
+      context: docker/distgit/
+    hostname: distgit-httpd
+    stdin_open: true
+    tty: true
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/opt/copr:z
+      - dist-git:/var/lib/dist-git:z
+    command: /usr/sbin/httpd -DFOREGROUND
+    <<: *ulimits_settings
+
+  keygen-signd:
+    build:
+      context: docker/keygen/
+    hostname: keygen-signd
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - copr-keygen:/var/lib/copr-keygen:z
+    command: /signd-entrypoint
+
+  keygen-httpd:
+    build:
+      context: docker/keygen/
+    hostname: keygen-httpd
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/opt/copr:z
+      - copr-keygen:/var/lib/copr-keygen:z
+
+  pulp:
+    image: ghcr.io/pulp/pulp:latest
+    hostname: pulp
+    stdin_open: true
+    tty: true
+    environment:
+      - PULP_DEFAULT_ADMIN_PASSWORD=admin
+    ports:
+      - 5006:80
+    volumes:
+      - pulp-storage:/var/lib/pulp:Z
+      - pulp-database:/var/lib/pgsql
+    devices:
+      - /dev/fuse:/dev/fuse
+
+
+volumes:
+  results:
+  copr-keygen:
+  dist-git:
+  database:
+  redis:
+  resalloc:
+  pulp-storage:
+  pulp-database:

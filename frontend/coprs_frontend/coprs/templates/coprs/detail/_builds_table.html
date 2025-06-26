@@ -1,0 +1,115 @@
+{% from "coprs/detail/_builds_forms.html" import copr_build_cancel_form, copr_build_repeat_form, copr_build_delete_form %}
+{% from "coprs/detail/_build_states.html" import build_states %}
+{% from "_helpers.html" import build_href_from_sql, build_state, initialize_datatables, copr_url %}
+{% from "_helpers.html" import pagination_form with context %}
+
+
+{% macro builds_table(builds, print_possible_states=True, serverside_pagination=None) %}
+  {% for build in builds %}
+    {% if loop.first %}
+    {% if not serverside_pagination %}
+    <noscript><p>WARNING!! This page is using JavaScript to filter, sort and delete builds from the table.</p></noscript>
+    {% endif %}
+    <table class="datatable dataTable table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Build ID</th>
+          <th>Package Name</th>
+          <th>Package Version</th>
+          <th>Submitted</th>
+          <th>Build Time</th>
+          <th>Status</th>
+
+          {% if copr and g.user and g.user.can_edit(copr) %}
+          <th data-orderable="false" class="show-me-javascript hidden"><a href="#" onclick="$('tr.build-row :checkbox').prop('checked', $('tr.build-row :checkbox').length != $('tr.build-row :checkbox:checked').length); return false;">Mark all</a></th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+      {% endif %}
+
+
+        <tr class="build-row" >
+          <td data-order="{{ build.id }}">
+            <b><a href="{{ build_href_from_sql(build) }}">
+              {{ build.id }}
+            </a></b>
+          </td>
+          <td>
+              {% if build.package_name %}
+                  {{ build.package_name }}
+              {% else %}
+                   -
+              {% endif %}
+          </td>
+          <td>
+              {% if build.pkg_version %}
+                  {{ build.pkg_version}}
+              {% else %}
+                   -
+              {% endif %}
+          </td>
+          <td data-order="{{build.submitted_on}}"> {{ build.submitted_on|time_ago() }} ago </td>
+          <td data-order="{{build.started_on|timestamp_diff(build.ended_on)}}"> {{ build.started_on|time_ago(build.ended_on) }} </td>
+          <td>
+            {{ build_state(build) }}
+          </td>
+
+          {% if copr and g.user and g.user.can_edit(copr) %}
+          <td class="show-me-javascript hidden">
+            <input type="checkbox" name="build_ids" value="{{ build.id }}"></input>
+          </td>
+          {% endif %}
+        </tr>
+
+    {% if loop.last %}
+      </tbody>
+    </table>
+    {% if not serverside_pagination %}
+        {{ initialize_datatables() }}
+    {% else %}
+        {{ pagination_form(serverside_pagination) }}
+    {% endif %}
+    {% if print_possible_states %}
+      {{ build_states() }}
+    {% endif %}
+    {% endif %}
+
+  {% else %}
+    {% if copr %}
+      {{ no_builds_window() }}
+    {% else %}
+      {# When displaying batches, there is no `copr` variable #}
+      <p>No builds found</p>
+    {% endif %}
+  {% endfor %}
+{% endmacro %}
+
+
+{% macro no_builds_window() %}
+  <div class="blank-slate-pf">
+    {% if not current_dirname %}
+    <div class="blank-slate-pf-icon">
+      <span class="pficon pficon pficon-add-circle-o"></span>
+    </div>
+    <h1>
+      No Builds in This Project
+    </h1>
+    <p>
+      Click on the New Build button to submit your first build.
+    </p>
+    <p>
+      You can also set up <strong>automatic builds</strong> directly from your git. This can be done on the <a href="{{ copr_url('coprs_ns.copr_packages', copr) }}">Packages view</a>.
+    </p>
+    {% if g.user and g.user.can_build_in(copr) %}
+    <div class="blank-slate-pf-main-action">
+      <a class="btn btn-primary btn-lg" href="{{ copr_url('coprs_ns.copr_add_build', copr) }}"> Submit a New Build </a>
+    </div>
+    {% endif %}
+    {% else %}
+    <h1>
+      No builds in this project directory.
+    </h1>
+    {% endif %}
+  </div>
+{% endmacro %}

@@ -1,0 +1,8 @@
+Integration with cgit (webUI for dist-git):
+
+    $ sudo dnf install cgit
+    $ sudo echo "scan-path=/var/lib/dist-git/git/" >> /etc/cgitrc
+    $ vim /etc/cgirc # and comment out line with `cache-size` configuration.
+
+See this about how to configure DistGit itself: 
+- https://github.com/release-engineering/dist-git

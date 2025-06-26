@@ -1,0 +1,21 @@
+# logrotation file for Copr backend
+
+/var/log/copr-backend/*.log {
+    weekly
+    rotate 6
+    copytruncate
+    compress
+    notifempty
+    missingok
+    create 640 copr copr
+}
+
+/var/log/copr-backend/workers/worker-*.log {
+    weekly
+    rotate 6
+    copytruncate
+    compress
+    notifempty
+    missingok
+    create 640 copr copr
+}

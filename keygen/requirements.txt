@@ -1,0 +1,6 @@
+sphinxcontrib-httpdomain
+flask
+mock
+pytest
+pytest-cov
+jinja2

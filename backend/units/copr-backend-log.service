@@ -1,0 +1,18 @@
+[Unit]
+Description=Copr Backend service, Log Handler component
+After=syslog.target network.target auditd.service redis.service
+PartOf=copr-backend.target
+Before=copr-backend-build.service copr-backend-action.service
+Requires=redis.service
+Wants=logrotate.timer
+
+[Service]
+Type=simple
+User=copr
+Group=copr
+ExecStart=/usr/bin/copr_run_logger.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=copr-backend.target copr-backend-build.service copr-backend-action.service

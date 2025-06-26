@@ -1,0 +1,34 @@
+version: '3'
+services:
+
+  # The main docker-compose.yaml file runs Copr services installed from RPM packages.
+  # For development purposes it might be useful to run them from git
+  # (changes doesn't need to be commited)
+
+  # Use this configuration by running
+  #    docker-compose -f docker-compose.dev.yaml up <service>
+
+  backend-log:
+    environment:
+      - PYTHONPATH=/opt/copr/backend
+    command: /usr/sbin/runuser -u copr -g copr -- /opt/copr/backend/run/copr_run_logger.py
+
+  backend-build:
+    environment:
+      - PYTHONPATH=/opt/copr/backend
+    command: /usr/sbin/runuser -u copr -g copr -- /usr/bin/copr-run-dispatcher-backend builds
+
+  backend-action:
+    environment:
+      - PYTHONPATH=/opt/copr/backend
+    command: /usr/sbin/runuser -u copr -g copr -- /usr/bin/copr-run-dispatcher-backend actions
+
+  frontend:
+    environment:
+      - PYTHONPATH=/opt/copr/frontend/coprs_frontend
+    command: /usr/sbin/runuser -u copr-fe -g copr-fe -- /opt/copr/frontend/coprs_frontend/manage.py runserver -p 5000 -h 0.0.0.0 --without-threads --no-reload
+
+  distgit:
+    environment:
+      - PYTHONPATH=/opt/copr/dist-git
+    command: /usr/sbin/runuser -u copr-dist-git -g copr-dist-git -- /opt/copr/dist-git/run/importer_runner.py

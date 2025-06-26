@@ -1,0 +1,14 @@
+PyYAML
+# ansible
+setproctitle
+redis
+# retask
+mock
+requests
+python-daemon
+lockfile
+
+
+# documentation
+sphinx
+sphinx-argparse

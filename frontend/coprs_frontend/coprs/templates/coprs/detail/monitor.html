@@ -1,0 +1,45 @@
+{% extends "coprs/detail.html" %}
+{% from "_helpers.html" import copr_url, copr_name, serverside_pagination_warning  %}
+{% from "coprs/detail/_build_states.html" import build_states %}
+{% block title %}Monitor {{ copr_name(copr) }}{% endblock %}
+
+{% set selected_tab = "monitor" %}
+{% set monitor_view='coprs_ns.copr_build_monitor' %}
+
+{%block project_breadcrumb %}
+<li>
+  <a href="{{ copr_url(monitor_view, copr) }}">Monitor</a>
+  {% block project_breadcrumb_monitor %}
+  {%endblock%}
+</li>
+{%endblock%}
+
+
+{% macro monitor_tab(tab_name, tab_title, href) %}
+  <a href="{{ href }}" class="btn btn-default btn-sm {% if selected_monitor_tab == tab_name %}active{% endif %}">
+    {{ tab_title }}
+  </a>
+{% endmacro %}
+
+
+{% block detail_body %}
+
+<h2 class="section-heading"> Build Monitor </h2>
+
+{% if pagination.serverside_pagination %}
+{{ serverside_pagination_warning() }}
+{% endif %}
+
+<div class="panel panel-default panel-monitor-menu">
+  <div class="panel-body">
+    <div class="btn-group" role="group">
+      {{ monitor_tab("simple", "Simple", copr_url(monitor_view, copr)) }}
+      {{ monitor_tab("detailed", "Detailed", copr_url(monitor_view, copr, detailed="detailed")) }}
+    </div>
+  </div>
+</div>
+
+{% block monitor_table %}{% endblock %}
+
+{{ build_states() }}
+{% endblock %}

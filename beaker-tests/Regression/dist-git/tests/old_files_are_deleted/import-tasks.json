@@ -1,0 +1,22 @@
+[
+{
+    "_description": "srpm containing specfile named example.spec",
+    "_expected_outcome": "success",
+
+    "branches": ["master"],
+    "project": "example",
+    "srpm_url": "http://localhost:5000/static/example.src.rpm",
+    "build_id": 1,
+    "owner": "clime"
+},
+{
+    "_description": "srpm containing specfile named foo.spec",
+    "_expected_outcome": "success",
+
+    "branches": ["master"],
+    "project": "example",
+    "srpm_url": "http://localhost:5000/static/foo.src.rpm",
+    "build_id": 2,
+    "owner": "clime"
+}
+]

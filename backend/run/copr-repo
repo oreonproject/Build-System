@@ -1,0 +1,455 @@
+#! /usr/bin/python3
+
+"""
+Remove/add package build(s) to copr repository, and
+    1. run createrepo_c,
+    2. run appstream-builder, and
+    3. modify repo so it contains modular metadata.
+We expect that this script can be run concurrently, so we acquire lock to not
+mess up everything around.
+"""
+
+import argparse
+import datetime
+import logging
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+
+from copr_common.lock import lock, LockTimeout
+from copr_backend.constants import CHROOTS_USING_SQLITE_REPODATA
+from copr_backend.createrepo import BatchedCreaterepo
+from copr_backend.helpers import (
+    BackendConfigReader,
+    CommandException,
+    run_cmd,
+    get_redis_logger,
+)
+
+
+def printable_cmd(cmd):
+    return ' '.join([shlex.quote(arg) for arg in cmd])
+
+
+def arg_parser_subdir_type(subdir):
+    if not subdir:
+        raise argparse.ArgumentTypeError("subdir can not be empty string")
+    if '..' in subdir:
+        raise argparse.ArgumentTypeError(
+                "relative '..' in subdir name '{}'".format(subdir))
+    if ' ' in subdir:
+        raise argparse.ArgumentTypeError(
+                "space character in subdir name '{}'".format(subdir))
+    if '/' in subdir:
+        raise argparse.ArgumentTypeError(
+                "'/' in subdir name '{}', we support only single-level subdir "
+                "for now".format(subdir))
+    return subdir
+
+
+def get_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--delete', action='append', metavar='SUBDIR',
+                        default=[], type=arg_parser_subdir_type)
+    parser.add_argument('--add', action='append', metavar='SUBDIR', default=[],
+                        type=arg_parser_subdir_type)
+    parser.add_argument('--devel', action='store_true', default=False)
+    parser.add_argument('--no-appstream-metadata', dest="appstream",
+                        action='store_false', default=True)
+    parser.add_argument('--log-to-stdout', action='store_true')
+    parser.add_argument("--batched", action="store_true",
+                        help="Try try to batch this request with requests "
+                             "from other processes.  When specified, the "
+                             "process needs an access to Redis DB.")
+    parser.add_argument('--rpms-to-remove', action='append', default=[],
+                        help="list of (s)RPM path names that should be removed")
+    parser.add_argument("--do-stat", action='store_true', default=False,
+                        help=("Run createrepo_c without the --skip-stat "
+                              "option, this e.g. helps to recognize that "
+                              "RPM files were re-signed (copr_fix_gpg.py)"))
+    parser.add_argument('directory')
+    return parser
+
+
+def unlink_unsafe(path):
+    try:
+        os.unlink(path)
+    except:
+        pass
+
+
+def process_backend_config(opts):
+    try:
+        config = "/etc/copr/copr-be.conf"
+        if "COPR_BE_CONFIG" in os.environ:
+            config = os.environ["COPR_BE_CONFIG"]
+        opts.backend_opts = BackendConfigReader(config).read()
+        opts.results_baseurl = opts.backend_opts.results_baseurl
+    except:
+        # Useful if copr-backend isn't correctly configured, or when
+        # copr-backend isn't installed (mostly developing and unittesting).
+        opts.backend_opts = None
+        opts.results_baseurl = 'https://example.com/results'
+
+    # obtain logger object
+    if 'COPR_TESTSUITE_NO_OUTPUT' in os.environ:
+        logging.basicConfig(level=logging.CRITICAL)
+        opts.log = logging.getLogger()
+        return
+
+    if opts.log_to_stdout:
+        logging.basicConfig(level=logging.DEBUG)
+        opts.log = logging.getLogger()
+        return
+
+    # meh, we should add our sources to default pythonpath
+    logger_name = '{}.pid-{}'.format(sys.argv[0], os.getpid())
+    opts.log = get_redis_logger(opts.backend_opts, logger_name, "modifyrepo")
+
+    # keep important info also on stderr
+    stderr_handler = logging.StreamHandler()
+    stderr_handler.setLevel(logging.WARNING)
+    opts.log.addHandler(stderr_handler)
+
+
+def filter_existing(opts, subdirs):
+    """ Return items from ``subdirs`` that exist """
+    new_subdirs = []
+    for subdir in subdirs:
+        full_path = os.path.join(opts.directory, subdir)
+        if not os.path.exists(full_path):
+            opts.log.warning("Subdirectory %s doesn't exist", subdir)
+            continue
+        new_subdirs.append(subdir)
+    return new_subdirs
+
+
+def _database_option(chroot: str) -> str:
+    for os_family, old_versions in CHROOTS_USING_SQLITE_REPODATA.items():
+        if any(f"{os_family}-{old_version}" == chroot for old_version in old_versions):
+            return "--database"
+
+    return "--no-database"
+
+
+def run_createrepo(opts):
+    compression = "--general-compress-type=gz"
+    createrepo_cmd = ['/usr/bin/createrepo_c', opts.directory, _database_option(opts.chroot), '--ignore-lock',
+                      '--local-sqlite', '--cachedir', '/tmp/', '--workers', '8', compression]
+
+    if "epel-5" in opts.directory or "rhel-5" in opts.directory:
+        # this is because rhel-5 doesn't know sha256
+        createrepo_cmd.extend(['-s', 'sha', '--checksum', 'md5'])
+
+    mb_comps_xml_path = os.path.join(opts.directory, "comps.xml")
+    if os.path.exists(mb_comps_xml_path):
+        createrepo_cmd += ['--groupfile', mb_comps_xml_path]
+
+    repodata_xml = os.path.join(opts.directory, 'repodata', 'repomd.xml')
+    repodata_exist = os.path.exists(repodata_xml)
+
+    if repodata_exist:
+        # optimized createrepo run
+        createrepo_cmd += ["--update"]
+        if not opts.do_stat:
+            # We never change the RPM files, therefore we can rely on the
+            # caches.  Exception to this rule is e.g. copr_fix_gpg.py file.
+            createrepo_cmd += ["--skip-stat"]
+        if not opts.full:
+            createrepo_cmd += ["--recycle-pkglist"]
+
+    opts.add = filter_existing(opts, opts.add)
+    opts.delete = filter_existing(opts, opts.delete)
+
+    # full run is never skipped
+    createrepo_run_needed = opts.full
+
+    for subdir in opts.delete:
+        # something is going to be deleted
+        createrepo_run_needed = True
+        createrepo_cmd += ['--excludes', '*{}/*'.format(subdir)]
+
+    for rpm in opts.rpms_to_remove:
+        createrepo_run_needed = True
+        createrepo_cmd += ['--excludes', '{}'.format(rpm)]
+
+    filelist = os.path.join(opts.directory, '.copr-createrepo-pkglist')
+    if opts.add:
+        # assure createrepo is run after each addition
+        createrepo_run_needed = True
+
+        unlink_unsafe(filelist)
+        with open(filelist, "wb") as filelist_fd:
+            for subdir in opts.add:
+                q_dir = shlex.quote(opts.directory)
+                q_sub = shlex.quote(subdir)
+                find = 'cd {} && find {} -name "*.rpm"'.format(q_dir, q_sub)
+                opts.log.info("searching for rpms: %s", find)
+                files = subprocess.check_output(find, shell=True)
+                opts.log.info("rpms: %s", files.decode('utf-8').strip().split('\n'))
+                filelist_fd.write(files)
+
+        createrepo_cmd += ['--pkglist', filelist]
+
+    if opts.devel:
+        # createrepo_c doesn't create --outputdir itself
+        outputdir = os.path.join(opts.directory, 'devel')
+        try:
+            os.mkdir(outputdir)
+        except FileExistsError:
+            pass
+
+        createrepo_cmd += [
+            '--outputdir', outputdir,
+            '--baseurl', opts.baseurl]
+
+        # TODO: With --devel, we should check that all removed packages isn't
+        # referenced by the main repository.  If it does, we should delete those
+        # entries from main repo as well.
+
+    try:
+        if createrepo_run_needed:
+            run_cmd(createrepo_cmd, check=True, logger=opts.log)
+        else:
+            opts.log.info("createrepo_c run is not actually needed, "
+                          "skipping command: %s",
+                          printable_cmd(createrepo_cmd))
+
+    finally:
+        unlink_unsafe(filelist)
+
+    return createrepo_run_needed
+
+
+def add_appdata(opts):
+    if opts.devel:
+        opts.log.info("appstream-builder skipped, /devel subdir")
+        return
+
+    if os.path.exists(os.path.join(opts.projectdir, ".disable-appstream")):
+        opts.log.info("appstream-builder skipped, .disable-appstream file")
+        return
+
+    if not opts.appstream:
+        opts.log.info("appstream-builder skipped")
+        return
+
+    path = opts.directory
+    origin = os.path.join(opts.ownername, opts.projectname)
+
+    run_cmd([
+        "/usr/bin/timeout", "--kill-after=240", "180",
+        "/usr/bin/appstream-builder",
+        "--temp-dir=" + os.path.join(path, 'tmp'),
+        "--cache-dir=" + os.path.join(path, 'cache'),
+        "--packages-dir=" + path,
+        "--output-dir=" + os.path.join(path, 'appdata'),
+        "--basename=appstream",
+        "--include-failed",
+        "--min-icon-size=48",
+        "--veto-ignore=missing-parents",
+        "--enable-hidpi",
+        "--origin=" + origin],
+        check=True, logger=opts.log)
+
+    mr_cmd = ["/usr/bin/modifyrepo_c", "--no-compress"]
+
+    if os.path.exists(os.path.join(path, "appdata", "appstream.xml.gz")):
+        run_cmd(mr_cmd + [os.path.join(path, 'appdata', 'appstream.xml.gz'),
+                          os.path.join(path, 'repodata')],
+                check=True, logger=opts.log)
+
+    if os.path.exists(os.path.join(path, "appdata", "appstream-icons.tar.gz")):
+        run_cmd(mr_cmd +
+                [os.path.join(path, 'appdata', 'appstream-icons.tar.gz'),
+                 os.path.join(path, 'repodata')],
+                check=True, logger=opts.log)
+
+    # The appstream-builder utility provides a strange access rights to the
+    # created directories.  Fix them, so that lighttpd could serve appdata dir.
+    # https://github.com/hughsie/appstream-glib/issues/399
+    fix_dirs = ["tmp", "cache", "appdata"]
+    find_cmd = ["find"] + [os.path.join(path, subdir) for subdir in fix_dirs]
+    run_cmd(find_cmd + ["-type", "d", "-exec", "chmod", "755", "{}", "+"],
+            check=True, logger=opts.log)
+    run_cmd(find_cmd + ["-type", "f", "-exec", "chmod", "644", "{}", "+"],
+            check=True, logger=opts.log)
+
+
+def delete_builds(opts):
+    # To avoid race conditions, remove the directories _after_ we have
+    # successfully generated the new repodata.
+    for subdir in opts.delete:
+        opts.log.info("removing %s subdirectory", subdir)
+        try:
+            shutil.rmtree(os.path.join(opts.directory, subdir))
+        except:
+            opts.log.exception("can't remove %s subdirectory", subdir)
+
+    for rpm in opts.rpms_to_remove:
+        opts.log.info("removing %s", rpm)
+        try:
+            os.unlink(os.path.join(opts.directory, rpm))
+            prune_log = os.path.join(opts.directory, os.path.dirname(rpm),
+                                     "prune.log")
+            with open(prune_log, "a+") as fd:
+                fd.write("{} pruned on {}, by PID {}\n".format(
+                    rpm,
+                    datetime.datetime.now(datetime.UTC),
+                    os.getpid(),
+                ))
+        except OSError:
+            opts.log.exception("can't remove %s", rpm)
+
+
+def assert_new_createrepo():
+    sp = subprocess.Popen(['/usr/bin/createrepo_c', '--help'],
+                          stdout=subprocess.PIPE)
+    out, _ = sp.communicate()
+    assert b'--recycle-pkglist' in out
+
+
+def main_locked(opts, batch, log):
+    """
+    Main method, executed under lock.
+    """
+    if batch.check_processed():
+        log.info("Task processed by other process")
+        return
+
+    # Merge others' tasks with ours (if any).
+    (batch_full, batch_add, batch_delete, batch_rpms_to_remove) = batch.options()
+
+    if batch_full:
+        log.info("Others requested full createrepo")
+        opts.full = True
+        # There's no point in searching for directories to be added, but we
+        # still want to process .delete/.rpms_to_remove!
+        opts.add = []
+
+    if batch_add:
+        if opts.full:
+            log.info("Ignoring subdirs %s requested to --add by others",
+                     ", ".join(batch_add))
+        else:
+            opts.add += list(batch_add)
+
+    opts.delete += list(batch_delete)
+    opts.rpms_to_remove += list(batch_rpms_to_remove)
+
+    dont_add = set(opts.delete).intersection(opts.add)
+    if dont_add:
+        log.info("Subdirs %s are requested to both added and removed, "
+                 "so we only remove them", ", ".join(dont_add))
+        opts.add = list(set(opts.add) - dont_add)
+
+    # (re)create the repository
+    if not run_createrepo(opts):
+        opts.log.warning("no-op")
+        return
+
+    # delete the RPMs, do this _after_ craeterepo, so we close the major
+    # race between package removal and re-createrepo
+    delete_builds(opts)
+
+    # TODO: racy, these info aren't available for some time, once it is
+    # possible we should move those two things before 'delete_builds' call.
+    add_appdata(opts)
+
+    # while we still hold the lock, notify others we processed their task
+    batch.commit()
+
+    log.info("%s run successful", sys.argv[0])
+
+
+def process_directory_path(opts):
+    helper_path = opts.directory = os.path.realpath(opts.directory)
+    helper_path, opts.chroot = os.path.split(helper_path)
+    opts.projectdir = helper_path
+    helper_path, opts.dirname = os.path.split(helper_path)
+    helper_path, opts.ownername = os.path.split(helper_path)
+    opts.projectname = opts.dirname.split(':')[0]
+    opts.baseurl = os.path.join(opts.results_baseurl, opts.ownername,
+                                opts.dirname, opts.chroot)
+
+
+def main_try_lock(opts, batch):
+    """
+    Periodically try to acquire the lock, and execute the main_locked() method.
+    """
+
+    while True:
+
+        # We don't have fair locking (locks-first => processes-first).  So to
+        # avoid potential indefinite waiting (see issue #1423) we check if the
+        # task isn't already processed _without_ having the lock.
+
+        if batch.check_processed(delete_if_not=False):
+            opts.log.info("Task processed by other process (no-lock)")
+            return
+
+        try:
+            lockdir = os.environ.get(
+                "COPR_TESTSUITE_LOCKPATH", "/var/lock/copr-backend")
+            with lock(opts.directory, lockdir=lockdir, timeout=5, log=opts.log):
+                main_locked(opts, batch, opts.log)
+                # skip commit if main_locked() raises exception
+                batch.commit()
+                # Unless there's an exception, the bash.commit() is done and we are
+                # done.
+                opts.log.debug("Metadata built by this process")
+                break
+        except LockTimeout:
+            continue  # Try again...
+
+        # we never loop, only upon timeout
+        assert False
+
+
+def main():
+    opts = get_arg_parser().parse_args()
+
+    # neither --add nor --delete means we do full createrepo run
+    opts.full = not(opts.add or opts.delete or opts.rpms_to_remove)
+
+    # try to setup logging based on copr-be.conf
+    process_backend_config(opts)
+
+    # resolve absolute path from opts.directory, and detect
+    # ownername, dirname, chroot, etc. from it
+    process_directory_path(opts)
+
+    assert_new_createrepo()
+
+    # Initialize the batch structure.  It's methods are "no-op"s when
+    # the --batch option isn't specified.
+    batch = BatchedCreaterepo(
+        opts.directory,
+        opts.full,
+        opts.add,
+        opts.delete,
+        opts.rpms_to_remove,
+        log=opts.log,
+        devel=opts.devel,
+        appstream=opts.appstream,
+        backend_opts=opts.backend_opts,
+        noop=not opts.batched)
+
+    # If appropriate, put our task to Redis DB and allow _others_ to process our
+    # own task.  This needs to be run _before_ the lock() call.
+    batch.make_request()
+
+    try:
+        main_try_lock(opts, batch)
+    except CommandException:
+        opts.log.exception("Sub-command failed")
+        return 1
+
+    except Exception:
+        opts.log.exception("Unexpected exception")
+        raise
+
+if __name__ == "__main__":
+    sys.exit(main())

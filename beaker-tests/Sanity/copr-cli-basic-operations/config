@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Copr instance
+# In some cases it might be useful to use different instance than
+# copr-*-dev (e.g. having post-release test for prodution or running
+# tests against a local dev stack). For this reason, the following
+# settings are override-able from command line.
+
+: "${FRONTEND_URL=https://copr.stg.fedoraproject.org}"
+: "${BACKEND_URL=https://copr-be-dev.cloud.fedoraproject.org}"
+: "${DISTGIT_URL=https://copr-dist-git-dev.fedorainfracloud.org}"
+: "${OWNER=@copr}"
+: "${VENDOR=Fedora Copr (devel) - group @copr}"
+: "${DISTGIT_BRANCH_FEDORA_PREFIX=f}"
+
+# Owner and project
+NAME_VAR="TEST$(date +%s%N)" # names should be unique
+NAME_PREFIX="$OWNER/$NAME_VAR"
+USER=`copr-cli whoami`
+
+
+# Some tests might want to install built packages
+# Therefore, these packages need to be built for the same fedora version
+# as this script is going to be run from
+FEDORA_VERSION=41
+PREV_FEDORA_VERSION=40
+
+CHROOT="fedora-$FEDORA_VERSION-x86_64"
+PREV_CHROOT="fedora-$PREV_FEDORA_VERSION-x86_64"
+
+BRANCH="f$FEDORA_VERSION"
+DISTGIT_BRANCH_FEDORA=$DISTGIT_BRANCH_FEDORA_PREFIX$FEDORA_VERSION
+
+# Useful paths
+SCRIPTPATH="$( builtin cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+HERE=$SCRIPTPATH
+FILES=$HERE/files
+
+: ${COPR_CLEANUP=true}
+
+# Debug
+echo "USER = $USER"
+echo "FRONTEND_URL = $FRONTEND_URL"
+echo "BACKEND_URL = $BACKEND_URL"
+echo "DISTGIT_URL = $DISTGIT_URL"

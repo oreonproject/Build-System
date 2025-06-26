@@ -1,0 +1,49 @@
+{% from "_helpers.html" import copr_url %}
+{% from "coprs/detail/_package_forms.html" import
+   copr_package_form_scm,
+   copr_package_form_pypi,
+   copr_package_form_rubygems,
+   copr_package_form_custom,
+   copr_package_form_distgit,
+with context %}
+
+
+{% macro nav_element(tab_name, tab_title, href) %}
+  <li class="{% if source_type_text == tab_name %}active{% endif %}">
+    <a href="{{ href }}">
+      {{ tab_title }}
+    </a>
+  </li>
+{% endmacro %}
+
+{% macro show_navigation(copr, view) %}
+  {# kwargs: pass package_name='...' when editing the package #}
+  <ul class="nav nav-tabs nav-tabs-pf">
+    {{ nav_element("scm", "SCM", copr_url(view, copr, source_type_text="scm", **kwargs)) }}
+    {{ nav_element("distgit", "DistGit", copr_url(view, copr, source_type_text="distgit", **kwargs)) }}
+    {{ nav_element("pypi", "PyPI", copr_url(view, copr, source_type_text="pypi", **kwargs)) }}
+    {{ nav_element("rubygems", "RubyGems", copr_url(view, copr, source_type_text="rubygems", **kwargs)) }}
+    {{ nav_element("custom", "Custom", copr_url(view, copr, source_type_text="custom", **kwargs)) }}
+  </ul>
+{% endmacro %}
+
+{% macro show_package_form(source_type_text, package) %}
+  {% if source_type_text == "scm" %}
+    {{ copr_package_form_scm(form_scm, view, copr, package) }}
+
+  {% elif source_type_text == "distgit" %}
+    {{ copr_package_form_distgit(form_distgit, view, copr, package) }}
+
+  {% elif source_type_text == "pypi" %}
+    {{ copr_package_form_pypi(form_pypi, view, copr, package) }}
+
+  {% elif source_type_text == "rubygems" %}
+    {{ copr_package_form_rubygems(form_rubygems, view, copr, package) }}
+
+  {% elif source_type_text == "custom" %}
+    {{ copr_package_form_custom(form_custom, view, copr, package) }}
+
+  {% else %}
+    <h3>Wrong source type</h3>
+  {% endif %}
+{% endmacro %}

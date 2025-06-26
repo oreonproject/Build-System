@@ -1,0 +1,134 @@
+#!/bin/sh
+
+HELLO=https://github.com/fedora-copr/copr-test-sources/raw/main/hello-2.8-1.src.rpm
+EVIL_HELLO=https://github.com/fedora-copr/copr-test-sources/raw/main/evilhello-2.8-2.src.rpm
+SRPM_BUILDTAG=https://github.com/fedora-copr/copr-test-sources/raw/main/buildtag-0-0.src.rpm
+COPR_HELLO_GIT=https://github.com/fedora-copr/copr-test-hello.git
+COPR_HELLO_2_GIT=https://github.com/fedora-copr/copr-test-hello-2.git
+DNF_COPR_ID=tested-copr
+
+parse_build_id()
+{
+   local id
+   id=$(grep 'Created builds:' "$rlRun_LOG" | sed 's/.* //')
+   test -n "$id" || return 1
+   export BUILD_ID=$id
+}
+
+quote_args()
+{
+    quote_args_result=
+    __qa_space=
+    for __qa_arg; do
+        quote_args_result+=$__qa_space$(printf %q "$__qa_arg")
+        __qa_space=' '
+    done
+}
+
+copr_build_and_parse_id()
+{
+    quote_args "copr-cli" "$@" --nowait
+    rlRun -s "$quote_args_result"
+    rlRun parse_build_id
+    rlRun "copr watch-build $BUILD_ID"
+}
+
+cleanAction()
+{
+    quote_args "$@"
+
+    if $COPR_CLEANUP; then
+        rlRun "$quote_args_result"
+    else
+        rlLogInfo "Cleanup disabled, run manually: $quote_args_result"
+    fi
+}
+
+# cleanProject [PROJECT]
+# ----------------------
+# When called without PROJECT, project with name $PROJECT is deleted.
+cleanProject()
+{
+    _to_delete=$1
+    test $# -eq 0 && _to_delete=$PROJECT
+    cleanAction copr-cli delete "$_to_delete"
+}
+
+workdirSetup()
+{
+    rlRun "WORKDIR=\$(mktemp -d)" 0 'Creating working directory'
+    rlRun "pushd $WORKDIR"
+}
+
+workdirCleanup()
+{
+    rlRun 'popd'
+    rlRun "rm -r \$WORKDIR" 0 "Removing working directory"
+}
+
+setupProjectName()
+{
+    _name=$NAME_PREFIX-$1
+    _project=$NAME_VAR-$1
+    rlRun "PROJECT=$_name" 0 "Setting project name to $_name"
+    rlRun "PROJECTNAME=$_project" 0 "Setting project name to $_project"
+}
+
+repo_owner()
+{
+    case $OWNER in
+    *@*) echo "$OWNER" | sed 's/^@/group_/' ;;
+    *) echo "$OWNER" ;;
+    esac
+}
+
+build_id_with_leading_zeroes()
+{
+    printf "%08d" "$BUILD_ID"
+}
+
+get_srpm_builder_log()
+{
+    _log_file="$BACKEND_URL/results/$PROJECT/srpm-builds/$(build_id_with_leading_zeroes)/builder-live.log.gz"
+    rlLog "downloading $_log_file"
+    curl "$_log_file" | gunzip
+}
+
+get_rpm_builder_log()
+{
+    _pkgname=$1
+    _log_file="$BACKEND_URL/results/$PROJECT/$CHROOT/$(build_id_with_leading_zeroes)-${_pkgname}/builder-live.log.gz"
+    rlLog "downloading $_log_file"
+    curl "$_log_file" | gunzip
+}
+
+setup_checks()
+{
+    rlAssertRpm "copr-cli"
+    _config=$HOME/.config/copr
+    rlAssertExists "$_config"
+
+    # we currently support only staging instances
+    _frontend_url=$(grep ^copr_url "$_config" | cut -d= -f2)
+    case $_frontend_url in
+        *copr.stg.fedoraproject.org) ;;
+        *dev-copr.devel.redhat.com) ;;
+        # https://docs.pagure.org/copr.copr/sanity_tests.html#sanity-tests
+        *frontend) ;;
+        *) rlDie "improper copr_url in $_config" ;;
+    esac
+
+    # token ok? communication ok?
+    rlRun "copr-cli whoami"
+
+    # Make sure the test container is running an expected Fedora version.
+    # This is important because some tests build packages only for this Fedora
+    # version and then try to install them. If there is a Fedora version
+    # mismatch, such tests will fail and it is not trivial to find out why.
+    rlRun "cat /etc/os-release |grep VERSION_ID=${FEDORA_VERSION}"
+}
+
+join_lines()
+{
+    tr '\n' ' ' | sed 's/ $//'
+}

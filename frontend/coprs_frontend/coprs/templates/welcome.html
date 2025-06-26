@@ -1,0 +1,230 @@
+<div class="oreon-welcome-section">
+  <div class="welcome-header">
+    <h2 class="oreon-gradient-text">Welcome to Oreon Build System</h2>
+    <p class="welcome-subtitle">Modern automated build platform for RPM packages and ISO images</p>
+  </div>
+  
+  <div class="welcome-features">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-cube"></i></div>
+          <h4>Package Building</h4>
+          <p>Build RPM packages from various sources including Git repositories, uploaded spec files, and tarballs.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-compact-disc"></i></div>
+          <h4>ISO Builder</h4>
+          <p>Create custom Linux distribution ISOs using kickstart files and livemedia-creator technology.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa fa-rocket"></i></div>
+          <h4>Mass Building</h4>
+          <p>Build and manage multiple packages as unified projects with automated dependency resolution.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="welcome-steps">
+    <h3>Get started in three simple steps:</h3>
+    <div class="steps-container">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h4>Create Your Project</h4>
+          <p>Set up a new project and select your target architectures and distributions</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h4>Upload Sources</h4>
+          <p>Provide your source RPMs, spec files, or kickstart files for ISO building</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h4>Build & Deploy</h4>
+          <p>Let Oreon Build System handle the building process and create your repositories</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="welcome-cta">
+    <div class="row">
+      <div class="col-md-6">
+        <a href="/coprs/add/" class="oreon-btn oreon-btn-primary btn-lg">
+          <i class="fa fa-plus"></i> Create New Project
+        </a>
+      </div>
+      <div class="col-md-6">
+        <a href="/iso/new" class="oreon-btn oreon-btn-secondary btn-lg">
+          <i class="fa fa-compact-disc"></i> Build ISO Image
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="welcome-note">
+    <p><i class="fa fa-info-circle"></i> <strong>Note:</strong> Oreon Build System is the modern evolution of package building technology, designed for the next generation of Linux distributions.</p>
+  </div>
+</div>
+
+<style>
+.oreon-welcome-section {
+  padding: 40px 0;
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.welcome-header h2 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  color: rgba(44, 62, 80, 0.7);
+  margin-bottom: 0;
+}
+
+.welcome-features {
+  margin-bottom: 50px;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 30px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  margin-bottom: 20px;
+  transition: var(--transition);
+  height: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  display: block;
+  color: var(--oreon-primary);
+}
+
+.feature-card h4 {
+  color: var(--oreon-dark);
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.feature-card p {
+  color: rgba(44, 62, 80, 0.7);
+  margin-bottom: 0;
+}
+
+.welcome-steps {
+  margin-bottom: 50px;
+}
+
+.welcome-steps h3 {
+  text-align: center;
+  margin-bottom: 40px;
+  color: var(--oreon-dark);
+  font-weight: 600;
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--oreon-primary) 0%, var(--oreon-secondary) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.3);
+}
+
+.step-content h4 {
+  color: var(--oreon-dark);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.step-content p {
+  color: rgba(44, 62, 80, 0.7);
+  margin-bottom: 0;
+}
+
+.welcome-cta {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.welcome-cta .oreon-btn {
+  margin: 10px;
+  min-width: 200px;
+}
+
+.welcome-note {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: var(--radius-md);
+  color: rgba(44, 62, 80, 0.8);
+}
+
+.welcome-note i {
+  color: var(--oreon-primary);
+  margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+  .steps-container {
+    flex-direction: column;
+    gap: 40px;
+  }
+  
+  .welcome-header h2 {
+    font-size: 2rem;
+  }
+  
+  .welcome-cta .oreon-btn {
+    display: block;
+    margin: 10px auto;
+    max-width: 250px;
+  }
+}
+</style>

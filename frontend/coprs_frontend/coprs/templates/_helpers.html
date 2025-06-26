@@ -1,0 +1,1052 @@
+{% macro render_field(field, label=None, class=None, info=None, width=None) %}
+  {% if not kwargs['hidden'] %}
+
+    <div class="form-group {% if field.errors %} has-error {% endif %} ">
+      <label class="col-sm-2 control-label">
+        {{ label or field.label }}:
+      </label>
+      <div class="col-sm-{{ width if width else 10 }}">
+        {{ field(class="form-control" + (" " + class if class else ""), **kwargs)|safe }}
+        <ul class="list-unstyled">
+        {% if info %}
+          {% for line in (info if info is not string else [info]) %}
+          <li class="help-block">
+            <small class="text-muted pficon pficon-info"></small> {{line|safe}}
+          </li>
+          {% endfor %}
+        {% elif field.description %}
+          <li class="help-block">
+            <small class="text-muted pficon pficon-info"></small> {{field.description|safe}}
+          </li>
+        {% endif %}
+        {% if field.errors %}
+          {% for error in field.errors %}
+          <li class="help-block">
+            <span class="help-block">{{ error }}</span>
+          </li>
+          {% endfor %}
+        {% endif %}
+        </ul>
+      </div>
+    </div>
+  {% else %}
+    {{ field(**kwargs)|safe }}
+  {% endif %}
+{% endmacro %}
+
+{% macro render_checkbox_field(title, items) %}
+<div class="form-group">
+  <label class="col-sm-2 control-label" for="textInput-markup">
+    {{ title }}
+  </label>
+  <div class="col-sm-10">
+    {% for tuple in items %}
+      {% set checkbox = tuple[0] %}
+      {% set show     = tuple[1] if tuple|length > 1 else True %}
+      {% if show %}
+    <div class="checkbox">
+      <label>
+        {{ checkbox }}
+        {{ checkbox.label.text }}
+        {% if checkbox.description %}
+        <br>
+        <small class="text-muted pficon pficon-info">
+          {{ checkbox.description }}
+        </small>
+        {% endif %}
+      </label>
+    </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_pypi_python_versions_field(field) %}
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+    <label class="col-sm-2 control-label">
+      <label for="python_versions">Build for Python</label>:
+    </label>
+    <div class="col-sm-10 pypi-python-version">
+      <input id="python_versions-0" name="python_versions" value="3" type="checkbox" {% if '3' in field.data %}checked="checked"{% endif %}>
+      <label for="python_versions-0">3</label>&nbsp;&nbsp;&nbsp;
+      <input id="python_versions-1" name="python_versions" value="2" type="checkbox" {% if '2' in field.data %}checked="checked"{% endif %}>
+      <label for="python_versions-1">2</label>
+
+      <p class="help-block">
+        <small class="text-muted pficon pficon-info"></small>
+        Limited to <strong>pyp2rpm</strong> spec generator
+      </p>
+
+    </div>
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <li class="help-block">
+          <span class="help-block">{{ error }}</span>
+        </li>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_pagination(request, paginator) %}
+  {% if paginator.pages > 1 %}
+  <div class="text-center">
+    <ul class="pagination">
+      {% if paginator.border_url(request, True) %}
+      <li>
+        <a href="{{ paginator.border_url(request, True)[0] }}">{{ paginator.border_url(request, True)[1] }} ...</a>
+      </li>
+      {% endif %}
+      {% for page in paginator.get_urls(request) %}
+        {% if page[1] != paginator.page %} {# no url for current page #}
+        <li>
+          <a href="{{ page[0] }}">{{ page[1] }}</a>
+        </li>
+        {% else %}
+        <li class="active">
+          <span>{{ page[1] }}</span>
+        </li>
+        {% endif %}
+      {% endfor %}
+      {% if paginator.border_url(request, False) %}
+        <li>
+          <a href="{{ paginator.border_url(request, False)[0] }}">... {{ paginator.border_url(request, False)[1] }}</a>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_form_errors(form=[], errors=[]) %}
+  {% set errors = (errors + form.errors.values() |sum(start=[]))
+      |reject('none')
+      |select('defined')
+      |list
+  %}
+  {% if errors %}
+    <div class="alert alert-danger" role="alert">
+      <ul>
+        {% for error in errors %}
+          {% if error %}
+            <li>{{ error }}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro log_detective_ai_link(failed_log_url, build_id, chroot_name) %}
+  {% if config.LOG_DETECTIVE_BUTTON %}
+    {% if failed_log_url %}
+      {% set url = "https://log-detective.com/explain?url=%s" %}
+      <a href="{{ url | format(failed_log_url | urlencode) }}"
+        class="pficon pficon-info"
+        title="See what AI can tell you about the build failure">
+        Ask AI
+      </a> &nbsp / &nbsp
+    {% endif %}
+    {% set url = "https://log-detective.com/contribute/copr/%s/%s" %}
+    <a href="{{ url | format(build_id, chroot_name) }}"
+      class="pficon pficon-info"
+      title="Help us build a new AI tool to analyze build logs for you. We are creating new RPM build specific AI model, but we need more data to feed it with. Please, report and describe current logs in the redirected page.">
+      Teach AI
+    </a>
+  {% endif %}
+{% endmacro %}
+
+{% macro build_state_text(state, reason=None, builder_live_log=None) %}
+  <span class="build-{{ state }}"
+        title="{{ reason or state | build_state_description }}">
+  {% if state == "importing" %}
+    <span class="pficon pficon-running"></span> {{ state }}
+  {% elif state == "pending" %}
+    <span class="pficon pficon-running"></span> {{ state }}
+  {% elif state == "starting" %}
+    <span class="pficon pficon-running"></span> {{ state }}
+  {% elif state == "running" %}
+    <span class="pficon pficon-running"></span> {{ state }}
+  {% elif state == "succeeded" %}
+    <span class="pficon pficon-ok"></span> {{ state }}
+  {% elif state == "forked" %}
+    <span class="pficon pficon-ok"></span> {{ state }}
+  {% elif state == "skipped" %}
+    <span class="pficon pficon-ok"></span> {{ state }}
+  {% elif state == "failed" %}
+    <span class="pficon pficon-error-circle-o"></span> {{ state }}
+  {% elif state == "canceled" %}
+    <span class="pficon pficon-close"></span> {{ state }}
+  {% elif state == "waiting" %}
+    <span class="glyphicon glyphicon-hourglass"></span> {{ state }}
+  {% else %}
+    <span> unknown </span>
+  {% endif %}
+  </span>
+{% endmacro %}
+
+{% macro build_state(build) %}
+  {% if build.canceled %}
+    {{ build_state_text("canceled") }}
+  {% else %}
+    {% if build.status is not none %}
+      {{ build_state_text(build.status|state_from_num) }}
+    {% elif build.source_status %}
+      {{ build_state_text(build.source_status|state_from_num) }}
+    {% else %}
+      {{ build_state_text(0|state_from_num) }}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% macro module_state(module) %}
+  {{ build_state_text(module.status | module_state_from_num) }}
+{% endmacro %}
+
+{% macro os_logo(logo_name) %}
+    {% if logo_name %}
+      <img style="height:1.8em" src="{{ url_for('static', filename="chroot_logodir/"+logo_name) }}" />
+    {% endif %}
+{% endmacro %}
+
+{% macro friendly_os_name(os_release, os_version=None) %}
+  {% if os_release == 'epel' %}
+    EPEL {{ os_version }}
+  {% elif os_release == 'opensuse-leap' %}
+    openSUSE Leap {{ os_version }}
+  {% elif os_release == 'openeuler' %}
+    openEuler {{ os_version }}
+  {% elif os_release == 'opensuse' and os_version == 'tumbleweed' %}
+    openSUSE Tumbleweed
+  {% else %}
+    {{ os_release | capitalize }} {{ os_version }}
+  {% endif %}
+{% endmacro %}
+
+{% macro alert(message, type=None) %}
+  {% set alert_class_map = {
+        "error": "alert-danger",
+        "warning": "alert-warning",
+        "success": "alert-success",
+  } %}
+
+  {% set alert_icon_map = {
+        "error": "pficon-error-circle-o",
+        "warning": "pficon-warning-triangle-o",
+        "success": "pficon-ok",
+  } %}
+
+  <div class="alert {{ alert_class_map.get(type, 'alert-info') }} alert-dismissable">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+      <span class="pficon pficon-close"></span>
+    </button>
+    <span class="pficon {{ alert_icon_map.get(type, 'pficon-info') }}"></span>
+  {{ message |safe }}
+  </div>
+{% endmacro %}
+
+{%- macro copr_details_href(copr) %}
+  {{- copr_url('coprs_ns.copr_detail', copr) }}
+{%- endmacro %}
+
+{% macro copr_title(copr) %}
+  {% if copr.is_a_group_project %}
+    {% set projects_list_href=url_for('groups_ns.list_projects_by_group', group_name=copr.group.name) %}
+    {% set projects_list_name="@" + copr.group.name  %}
+  {% else %}
+    {% set projects_list_href=url_for('coprs_ns.coprs_by_user', username=copr.user.name) %}
+    {% set projects_list_name=copr.user.username  %}
+  {% endif %}
+
+  <a href="{{ projects_list_href }}">{{ projects_list_name }}</a><!--
+  --><span class="padding"></span>/<span class="padding"></span><!--
+  --><strong><a href="{{ copr_details_href(copr) }}">{{ copr.name }}</a></strong>
+{% endmacro %}
+
+
+{% macro copr_name(copr) -%}
+  {{ copr.full_name }}
+{% endmacro %}
+
+
+{%- macro owner_url(view, owner) %}
+  {#- Given the owner object (user or group) generate proper URL for view
+
+  Note that if you wan't to use this method for routes which _accept_ "coprname"
+  argument, you wan't to use `copr_url` below.
+
+  Usage:
+    owner_url('coprs_ns.foo', groupX)
+    owner_url('coprs_ns.foo', user1, arg1='bar', arg2='baz')
+  #}
+  {%- if owner.at_name %}
+    {{- url_for(view, group_name=owner.name, **kwargs)|fix_url_https_frontend }}
+  {%- else %}
+    {{- url_for(view, username=owner.name, **kwargs)|fix_url_https_frontend }}
+  {%- endif %}
+{% endmacro %}
+
+
+{%- macro copr_url(view, copr) %}
+  {#- Examine given copr and generate proper URL for the `view`
+
+  Values of `username/group_name` and `coprname` are autimatically passed as the first two URL parameters,
+  and therefore you should *not* pass them manually.
+
+  Usage:
+    copr_url('coprs_ns.foo', copr)
+    copr_url('coprs_ns.foo', copr, arg1='bar', arg2='baz')
+  #}
+  {{- owner_url(view, copr.owner, coprname=copr.name, **kwargs) }}
+{%- endmacro %}
+
+
+{%- macro copr_owner_url(copr) %}
+  {% if copr.is_a_group_project %}
+    {{- url_for('groups_ns.list_projects_by_group', group_name=copr.group.name) }}
+  {% else %}
+    {{- url_for('coprs_ns.coprs_by_user', username=copr.user.name) }}
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro user_projects_panel(user) %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title"> {{ g.user.name | capitalize}} </h3>
+    </div>
+    <div class="panel-body">
+      <img class="avatar" src="{{ g.user.gravatar_url }}" alt="User Image">
+    </div>
+    <div class="list-group">
+      <a href="{{ url_for('coprs_ns.coprs_by_user', username=g.user.name) }}" class="list-group-item">
+        <span class="badge">{{ g.user.coprs_count }}</span>
+        My projects
+      </a>
+    {% if config.FAS_LOGIN or config.LDAP_URL or config.OIDC_LOGIN %}
+      <a href="{{url_for('groups_ns.list_user_groups') }}" class="list-group-item">
+        <span class="badge"> {{ user.user_groups|length }} </span>
+        My groups
+      </a>
+    {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro task_queue_panel(tasks_info, graph) %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title"> Task Queue </h3>
+    </div>
+    <div class="list-group">
+      <a href="{{url_for('status_ns.batches')}}" class="list-group-item">
+        <span class="badge">{{ tasks_info.batches }}</span>
+        Build Batches
+      </a>
+      <a href="{{url_for('status_ns.importing')}}" class="list-group-item">
+        <span class="badge">{{ tasks_info.importing}}</span>
+        Importing
+      </a>
+      <a href="{{url_for('status_ns.pending')}}" class="list-group-item">
+        <span class="badge">{{ tasks_info.pending }}</span>
+        Pending
+      </a>
+      <a href="{{url_for('status_ns.starting')}}" class="list-group-item">
+        <span class="badge">{{ tasks_info.starting }}</span>
+        Starting
+      </a>
+      <a href="{{url_for('status_ns.running')}}" class="list-group-item">
+        <span class="badge">{{ tasks_info.running }}</span>
+        Running
+      </a>
+      <a id="stats-link" href="{{url_for('status_ns.stats')}}" class="list-group-item hidden">
+        Running tasks during last 24 hours:
+        <div id="small-graph" class="chart-pf-sparkline"></div>
+      </a>
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro recent_builds_panel(builds) %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title"> Recent Builds - <a href="{{ url_for('recent_ns.all') }}">View All</a></h3>
+    </div>
+    {%- if builds %}
+    <div class="list-group">
+      {% for build in builds %}
+        <a href="{{copr_url('coprs_ns.copr_build', build.copr, build_id=build.id)}}" class="list-group-item">
+
+          <h4 class="list-group-item-heading">{{build.package.name}}</h4>
+          <p class="list-group-item-text">
+            <small>Project:</small>
+            {{ copr_name(build.copr) }}
+          </p>
+          <p class="list-group-item-text">
+            <small>Build:</small>
+            {{build.id}}
+          </p>
+          <p class="list-group-item-text">
+            <small>State:</small>
+            <span class="build build-{{build.state}}">{{build.state}}</span>
+          </p>
+          <p class="list-group-item-text">
+            <small>Finished:</small>
+            {{build.max_ended_on|time_ago()}} ago
+          </p>
+        </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{% macro recent_blog_panel() %}
+  {% if config.NEWS_URL and config.NEWS_FEED_URL %}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">News - <a href="{{ config.NEWS_URL }}">Read All</a></h3>
+    </div>
+    <div class="list-group">
+      <noscript>
+        <a href="https://fedora-copr.github.io/" class="list-group-item">
+          <p class="list-group-item-text">
+            This page uses JavaScript to show the most recent articles from our blog.
+            Click here to visit the blog.
+          </p>
+        </a>
+      </noscript>
+      {% for i in range(2) %}
+      <a href="" id="blog-link-{{ i }}" class="list-group-item hidden">
+        <b class="list-group-item-heading" id="blog-title-{{ i }}"></b>
+        <p class="list-group-item-text">
+          <small>Published:</small>
+          <span id="blog-date-{{ i }}"></span>
+        </p>
+        <p class="list-group-item-text">
+          <small>Author:</small>
+          <span id="blog-author-{{ i }}"></span>
+        </p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro render_crumb(href, title, active=False) %}
+<li {% if active %} class="active" {% endif %} >
+  <a href="{{ href }}">
+    {{ title }}
+  </a>
+</li>
+{% endmacro %}
+
+{% macro render_breadcrumbs(crumbs) %}
+<ol class="breadcrumb">
+  render_crumb({{ url_for('coprs_ns.coprs_show') }}, "Home')
+
+  {% for href, title in crumbs %}
+    <li>
+      {% if href %}
+        <a href="{{ href }}"> {{ title }} </a>
+      {% else %}
+        {{ title }}
+      {% endif %}
+    </li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+
+{%- macro build_href(build) %}
+  {{- copr_url("coprs_ns.copr_build", build.copr, build_id=build.id) -}}
+{% endmacro %}
+
+{% macro build_href_from_sql(build) %}
+  {% if build.group_name %}
+    {{- url_for('coprs_ns.copr_build', group_name=(build.copr.group.name if build.copr is defined else build.group_name), coprname=build.copr_name, build_id=build.id) -}}
+  {% else %}
+    {{- url_for("coprs_ns.copr_build", username=(build.copr.user.name if build.copr is defined else build.user.name), coprname = build.copr_name, build_id = build.id) -}}
+  {% endif %}
+{% endmacro %}
+
+{% macro package_href(package) %}
+  {{- copr_url('coprs_ns.copr_package', package.copr, package_name=package.name) -}}
+{% endmacro %}
+
+{% macro repo_file_href(copr, repo, arch=None) %}
+{%- if not arch %}
+  {{- owner_url('coprs_ns.generate_repo_file',
+                copr.owner,
+                copr_dirname=copr.main_dir.name,
+                name_release=repo.name_release,
+                repofile=repo.repo_file,
+                _external=True) -}}
+{%- else %}
+  {{- owner_url('coprs_ns.generate_repo_file',
+                copr.owner,
+                copr_dirname=copr.main_dir.name,
+                name_release=repo.name_release,
+                repofile=repo.repo_file,
+                arch=arch,
+                _external=True) -}}
+{%- endif %}
+{% endmacro %}
+
+
+{% macro render_monitor_table(copr, pagination, oses, archs, simple=True) %}
+<table class="table table-striped table-bordered dataTable">
+  <thead>
+    <tr>
+      <th rowspan="2">Package</th>
+      {% for i, chroot in oses %}
+      <th colspan="{{i}}"> {{ chroot|capitalize }}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for chroot in archs %}
+      <th> {{ chroot }} </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+    {# This table should be sorted by package name #}
+    {% set current_row = [None] %}
+    {% set copr_active_chroots_sorted = copr.active_chroots_sorted %}
+    {% set copr_active_chroots_sorted_length = copr_active_chroots_sorted|length %}
+    {#% set copr_active_chroots_sorted_index = copr_active_chroots_sorted_length %#} {# we need to set this var from an inner scope, which is unsupported, hence the following list-as-a-counter hacks: #}
+    {% set copr_active_chroots_sorted_index = [1]*copr_active_chroots_sorted_length %}
+
+    </tr>
+
+    {% for package in pagination.items %}
+    <tr>
+        <td style="white-space:nowrap">
+          <b><a href="{{ copr_url('coprs_ns.copr_package', copr, package_name=package.name) }}">
+            {{ package.name }}
+          </a></b>
+        </td>
+
+        {% for buildchroot in package.latest_build_chroots %}
+        <td>
+            {% if buildchroot %}
+                <a href="{{ copr_url("coprs_ns.copr_build", copr, build_id=buildchroot.build_id) }}">
+                {% if simple %}
+                    {{ build_state_text(buildchroot.status|state_from_num) }}
+                {% else %}
+                    <small> {{ buildchroot.build_id }} </small> <br>
+                    {{ build_state_text(buildchroot.status|state_from_num) }}<br>
+                    <small class="text-muted"> {{ buildchroot.build.pkg_version }} </small>
+                {% endif %}
+                </a>
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+
+    {% for _ in range(copr_active_chroots_sorted_index|length, copr_active_chroots_sorted_length) %} {# "do" tag would help but just a tiny bit (so no enabling) #}
+      <td>-</td>
+    {% endfor %}
+    </tr>
+  </tbody>
+</table>
+
+{% if pagination.serverside_pagination %}
+{{ pagination_form(pagination) }}
+{% endif %}
+{% endmacro %}
+
+{% macro render_bootstrap_options(form, build=False) %}
+{{ render_field(form.bootstrap, placeholder='default') }}
+{% if form.bootstrap_image %}
+<div id="bootstrap_image_wrapper">
+{{ render_field(form.bootstrap_image, placeholder='Used when "custom image" is set in Mock Bootstrap. Enter in <distribution>:<version> format (e.g. fedora:32)') }}
+</div>
+<script>
+  $(document).ready(function() {
+    if ($("#bootstrap").val() != "custom_image") {
+      $("#bootstrap_image_wrapper").hide();
+    }
+    $("#bootstrap").change(function() {
+      if (this.value == "custom_image") {
+        $("#bootstrap_image_wrapper").show();
+      }
+      else {
+        $("#bootstrap_image_wrapper").hide();
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_additional_build_options(form, copr) %}
+  <div class="form-group">
+    {% if form.only_package_chroots %}
+    <label class="col-sm-2 control-label" for="textInput-markup">
+      Package config:
+    </label>
+    <div class="col-sm-10">
+      <div class="checkbox">
+        <label>
+          {{ form.only_package_chroots }}
+          {{ form.only_package_chroots.label }}
+        </label>
+      <div class="help-block">
+        <small class="text-muted pficon pficon-info">
+          {{form.only_package_chroots.description|safe}}
+        </small>
+      </div>
+      </div>
+    </div>
+    {% endif %}
+    <label class="col-sm-2 control-label" for="textInput-markup">
+      Chroots:
+    </label>
+    <div class="col-sm-10" id="chroots">
+      {% for ch in form.chroots %}
+        <div class="checkbox">
+          <label>
+            {{ ch }}
+            {{ ch.label }}
+            {% if loop.last %}&nbsp;&nbsp;&nbsp;<a href="#" onclick="$('#chroots :checkbox').prop('checked', $('#chroots :checkbox').length != $('#chroots :checkbox:checked').length); return false;">...toggle all</a>{% endif %}
+          </label>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {{ form.csrf_token }}
+  <div class="form-group">
+    <label class="col-sm-2 control-label" for="textInput-markup" >
+      Timeout:
+    </label>
+    <div class="col-sm-6">
+      <input id="timeout" class="form-control" name="timeout" type="text" value="{{ form.timeout.default }}" >
+      <li class="help-block">
+        <small class="text-muted pficon pficon-info"></small> {{form.timeout.description|safe}}
+      </li>
+    </div>
+  </div>
+
+  {{ render_field(form.isolation, placeholder='default') }}
+
+  {{ render_field(form.bootstrap, placeholder='default') }}
+
+  {{ render_field(form.with_build_id, class="input-field-12em") }}
+  {{ render_field(form.after_build_id, class="input-field-12em") }}
+  <div class="form-group">
+    <label class="col-sm-2 control-label" for="textInput-markup">
+    Other options:
+    </label>
+    <div class="col-sm-10">
+      <div class="checkbox">
+        <label>
+        {{ form.enable_net(checked=copr.build_enable_net) }}<label for="enable_net">Enable internet access during this build</label>
+        </label>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro render_srpm_build_method_box(form) %}
+  <!-- This closes "Provide the source" panel, so we can create a new one.
+       It is particularly ugly and needs to be changed -->
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ counter('instructions') }}. How to build SRPM from the source</h3>
+    </div>
+    <div class="panel-body">
+      <div class="list-group" style="margin-bottom: 0px">
+        {% set srpm_build_methods = [
+        ('rpkg', 'rpkg', 'Uses <a href="https://pagure.io/rpkg-util">rpkg</a> utility to build an srpm. Supports unpacked (plain sources + .spec) as well as packed (tarballs + patches + .spec) content.'),
+        ('tito', 'tito', 'This method can be used for projects that are managed with <a href="https://github.com/dgoodwin/tito">Tito</a> packaging tool.'),
+        ('tito test', 'tito_test', 'Same as previous Tito method, but passes <code>--test</code> parameter to use current branch HEAD instead of the last package tag. Also extends Release of the built package with Git versioning information.'),
+        ('make srpm', 'make_srpm', 'This method allows unlimited customization. You need to provide .copr/Makefile with srpm target in your project and this target will be invoked inside a mock chroot to build the srpm. You can read more <a href="https://docs.pagure.org/copr.copr/user_documentation.html#make-srpm">here</a>.'),
+        ] %}
+
+        {% for title, name, description in srpm_build_methods %}
+        <div class="list-group-item">
+          <div class="radio">
+            <label>
+              {% set checked = 'checked="checked"' if (form.srpm_build_method.data or 'rpkg') == name %}
+              <input id="{{ name }}" name="srpm_build_method" type="radio" value="{{ name }}" {{ checked }}>
+              <label for="{{ name }}">
+                <strong>{{ title }}</strong>
+                <br>
+                {{ description |safe }}
+              </label>
+            </label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+{% endmacro %}
+
+
+{% macro warn_server_admin(copr) %}
+  {% if being_server_admin(g.user, copr) %}
+    {% set msg = "As a maintainer of this Copr instance, you have permissions "
+                  "to modify this project, but if you are acting as a regular "
+                  "user now, be aware that this is not your project." %}
+    {{ alert(msg, type="warning") }}
+  {% endif %}
+{% endmacro %}
+
+
+{% macro initialize_datatables(order="desc") %}
+  <script>
+  // Initialize Datatables
+  $(document).ready(function() {
+    $(".show-me-javascript").removeClass("hidden");
+    $('.datatable').dataTable({
+      "order": [[ 0, '{{ order }}' ]],
+      "lengthMenu": [[25, 50, 100, -1], [25, 50, 100, 'All']],
+      dom:
+        "<'dataTables_header'<'dataTables_filter'f><'dataTables_info'i>>" +
+			  "<'row'<'col-sm-12'tr>>" +
+        "<'row table_footer'<'col-sm-6 dataTables_length'l><'col-sm-6 dataTables_info'p>>"
+    });
+
+    $('[name="DataTables_Table_0_length"]').change(function() {
+      if (this.value == -1) {
+        $("#DataTables_Table_0_paginate").hide();
+      } else {
+        $("#DataTables_Table_0_paginate").show();
+      }
+    });
+  });
+  </script>
+{% endmacro %}
+
+{% macro status_info(type, tasks) %}
+  <table class="datatable table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>
+            {% if type == 'importing' %}
+              Waiting
+            {% elif type == 'pending' %}
+              Pending
+            {% elif type == 'starting' %}
+              Starting
+            {% else %}
+              Running
+            {% endif %}
+          </th>
+          <th>Project</th>
+          <th>Build</th>
+          {% if type != 'importing' %}
+            <th>Package Name</th>
+            <th>Package Version</th>
+            <th>Chroot</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for task_type, time, task in tasks %}
+          {% set build_chroot = task if type == 'importing' or task_type == 'srpm' else task.build %}
+          <tr>
+            <td data-order="{{ time }}">{{ time | time_ago }}</td>
+            <td data-order="{{ copr_name(build_chroot.copr) }}">
+              <a href="{{ copr_details_href(build_chroot.copr) }}">
+                {{ copr_name(build_chroot.copr) }}
+              </a>
+            </td>
+            <td data-order="{{ build_chroot.id }}">
+              <a href="{{ build_href(build_chroot) }}">
+                {{ build_chroot.id }}
+              </a>
+              {% if build_chroot.is_background %}
+              <span class="badge">background</span>
+              {% endif %}
+            </td>
+            {% if type != 'importing' %}
+              {% if task_type == 'srpm' %}
+                {% if (task.package is not none) and (task.package.name is not none) %}
+                  <td data-order="{{ task.package.name }}">{{ task.package.name }} </td>
+                {% else %}
+                  <td data-order="-">-</td>
+                {% endif %}
+                {% if task.pkg_version is not none %}
+                  <td data-order="{{ task.pkg_version }}">{{ task.pkg_version }} </td>
+                {% else %}
+                  <td data-order="-">-</td>
+                {% endif %}
+                <td data-order="source build">Source build</td>
+              {% else %}
+                <td data-order="{{ task.build.package.name }}">{{ task.build.package.name }} </td>
+                <td data-order="{{ task.build.pkg_version }}">{{ task.build.pkg_version }} </td>
+                <td data-order="{{ task.mock_chroot.name }}">{{ task.mock_chroot.name }}</td>
+              {% endif %}
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endmacro %}
+
+
+{% macro render_project_box(copr, pinned=False) %}
+<!--copr-project-->
+<a href="{{ copr_details_href(copr) }}" class="list-group-item">
+  <div>
+    <h3 class="list-group-item-heading" style="display: inline;">
+      {{ copr_name(copr) }}
+    </h3>
+    {% if copr.delete_after %}
+    <small> (temporary project, {{ copr.delete_after_msg }})</small>
+    {% endif %}
+  </div>
+
+  {% if pinned %}
+  <span class="pull-right" title="Pinned project">
+    <i class="fa fa-thumb-tack fa-lg" aria-hidden="true"></i>
+  </span>
+  {% endif %}
+
+  <span class="list-group-item-text">
+      {{ copr.description|markdown|remove_anchor|default('Description not filled in by author. Very likely personal repository for testing purpose, which you should not use.', true) }}
+      <ul class="list-inline text-muted">
+      {% for os in copr.active_chroots_grouped %}
+        <li>
+          <strong>{{ friendly_os_name(os[0].split()[0], os[0].split()[1]) }}:</strong>
+          <small>
+          {% for arch in os[1] %}
+            {{ arch }}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+          </small>
+        </li>
+      {% endfor %}
+      </ul>
+    </span>
+</a>
+{% endmacro %}
+
+{% macro render_project_voting(copr) %}
+{% set score = g.user.score_for_copr(copr) if g.user else 0 %}
+
+{% set score_color = 'text-default' %}
+{% if score > 0 %}
+  {% set score_color = 'text-green' %}
+{% elif score < 0 %}
+  {% set score_color = 'text-danger' %}
+{% endif %}
+
+<div id="project-score" class="pull-left">
+  <form action="{{ copr_url('coprs_ns.copr_detail', copr) }}" method="POST">
+    <ul class="nav nav-pills nav-stacked">
+      <li role="presentation" class="{% if score > 0 %}{{ score_color }}{% endif %}">
+        {% if score > 0 %}
+        <button name="reset" type="submit" value="reset">
+        {% else %}
+        <button name="upvote" type="submit" value="upvote">
+        {% endif %}
+          <i class="fa fa-chevron-up fa-lg"></i>
+        </button>
+      </li>
+      <li role="presentation">
+        <span class="text-lg {{ score_color }}" title="{{ copr.upvotes }} upvotes and {{ copr.downvotes }} downvotes">
+          {{ copr.score }}
+        </span>
+      </li>
+      <li role="presentation" class="{% if score < 0 %}{{ score_color }}{% endif %}">
+        {% if score < 0 %}
+        <button name="reset" type="submit" value="reset">
+        {% else %}
+        <button name="downvote" type="submit" value="downvote">
+        {% endif %}
+          <i class="fa fa-chevron-down fa-lg"></i>
+        </button>
+      </li>
+    </ul>
+  </form>
+</div>
+{% endmacro %}
+
+
+{% macro render_repository_line(chroot) %}
+{% set color = 'danger' if chroot.delete_after_days < config.EOL_CHROOTS_NOTIFICATION_PERIOD else 'secondary' %}
+<tr class="text-{{ color }}">
+    <td>{{ chroot.mock_chroot.os.capitalize() }}</td>
+    <td>{{ chroot.mock_chroot.arch }}</td>
+    <td>{{ chroot.delete_after_humanized }}</td>
+    <td>
+        {% if g.user.can_edit(chroot.copr) %}
+        <button name="extend" class="btn btn-primary" type="submit" value="{{ chroot.mock_chroot.name }}"
+            {% if chroot.delete_after_expired %} disabled="disabled" {% endif %}>Extend
+        </button>
+        <button name="expire" class="btn btn-danger" type="submit" value="{{ chroot.mock_chroot.name }}"
+            {% if not chroot.delete_after_days > config["EOL_CHROOTS_EXPIRE_PERIOD"] %} disabled="disabled" {% endif %}
+            >Expire now
+        </button>
+        {% else %}
+            Missing admin permissions
+        {% endif %}
+    </td>
+</tr>
+{% endmacro %}
+
+
+{% macro pagination_form(pagination) %}
+<form class="content-view-pf-pagination table-view-pf-pagination clearfix"
+      id="pagination" method="post" action="{{ current_url() }}">
+  <div class="form-group">
+    <span>
+      <span class="pagination-pf-items-current">
+          {{ pagination.per_page*(pagination.page -1) + 1}} -
+          {{ pagination.per_page*(pagination.page) }}
+      </span>
+      of
+      <span class="pagination-pf-items-total">{{ pagination.total }}</span></span>
+    <ul class="pagination pagination-pf-back">
+      <li {% if not pagination.has_prev %}class="disabled"{% endif %}><a href="{{ current_url(page=1) }}" title="First Page"><span class="i fa fa-angle-double-left"></span></a></li>
+      <li {% if not pagination.has_prev %}class="disabled"{% endif %}><a href="{{ current_url(page=pagination.page - 1) }}"  title="Previous Page"><span class="i fa fa-angle-left"></span></a></li>
+    </ul>
+    <label for="pagination1-page" class="sr-only">Current Page</label>
+    <input class="pagination-pf-page" name="go_to_page"  type="text" value="{{ pagination.page }}" id="go_to_page" style="width: 3.5em;" />
+    <span>of <span class="pagination-pf-pages">{{ pagination.pages }}</span></span>
+    <ul class="pagination pagination-pf-forward">
+        <li {% if not pagination.has_next %}class="disabled"{% endif %}><a href="{{ current_url(page=pagination.page + 1) }}" title="Next Page"><span class="i fa fa-angle-right"></span></a></li>
+        <li {% if not pagination.has_next %}class="disabled"{% endif %}><a href="{{ current_url(page=pagination.pages) }}" title="Last Page"><span class="i fa fa-angle-double-right"></span></a></li>
+    </ul>
+  </div>
+</form>
+
+{% endmacro %}
+
+{% macro serverside_pagination_warning() %}
+<p> Warning!
+    This is a large project with many packages and/or builds - we can not hold all
+    the requested data on one page (as we usually do), please use the pagination
+    buttons below the table.
+</p>
+{% endmacro %}
+
+
+{% macro render_search_bar(large=False, form_id="1") %}
+{% set size = "input-group-lg" if large else "" %}
+<form role="search" method="get" id="{{ form_id }}"
+      action="{{ url_for('coprs_ns.coprs_fulltext_search') }}">
+  <div class="input-group {{ size }} menu-search">
+    <input name="fulltext" type="text" class="form-control"
+           placeholder="Search projects by name, os or arch"
+           value="{% block search_box %}{%endblock%}">
+
+    <div class="input-group-btn">
+      <button type="submit" class="btn btn-default">
+        <span class="glyphicon glyphicon-search"></span>
+      </button>
+
+      <button type="button" class="btn btn-default dropdown-toggle"
+              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="caret"></span>
+        <span class="sr-only">Toggle Dropdown</span>
+      </button>
+
+      <ul class="dropdown-menu">
+        <li>
+          <a id="search-username" onClick="search_by_attribute('ownername', {{ form_id }})" href="#">
+            Search by user name
+          </a>
+        </li>
+
+        <li>
+          <a id="search-groupname" onClick="search_by_attribute('ownername', {{ form_id }})" href="#">
+            Search by group name
+          </a>
+        </li>
+        <li role="separator" class="divider"></li>
+
+        <li>
+          <a id="search-projectname" onClick="search_by_attribute('projectname', {{ form_id }})" href="#">
+            Search by project name
+          </a>
+        </li>
+
+        <li>
+          <a id="search-packagename" onClick="search_by_attribute('packagename', {{ form_id }})" href="#">
+            Search by package name
+          </a>
+        </li>
+        <li role="separator" class="divider"></li>
+
+        <li>
+          <a href="https://docs.pagure.org/copr.copr/user_documentation.html#advanced-searching">
+            Searching documentation
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</form>
+{% endmacro %}
+
+
+{% macro projects_header(new_project=True, fedora_review=True,
+                         customize_pinned=True, my_projects=True) %}
+<div class="btn-group pull-right" role="group">
+
+  {% if new_project %}
+  <a href="{{url_for('coprs_ns.copr_add', username=g.user.name) }}" class="btn button-new btn-primary">
+    <span class="pficon pficon-add-circle-o"></span> New Project
+  </a>
+  {% endif %}
+
+  {% if fedora_review %}
+  <a href="{{url_for('coprs_ns.copr_add_fedora_review', username=g.user.name) }}"
+      class="btn button-new btn-default">
+    <span class="pficon pficon-add-circle-o"></span> Fedora Review </a>
+  {% endif %}
+
+  {% if my_projects %}
+  <a href="{{ url_for('coprs_ns.coprs_by_user', username=g.user.name) }}"
+      class="btn button-new btn-default">
+    <span class="fa fa-bars"></span> My Projects</a>
+  {% endif %}
+
+
+  {% if customize_pinned %}
+  <a href="{{ url_for('user_ns.pinned_projects') }}"
+     class="btn button-new btn-default">
+    <span class="pficon pficon-edit"></span> Customize Pinned
+  </a>
+  {% endif %}
+
+</div>
+{% endmacro %}
+
+
+{% macro documentation_card(icon, title, url, text, first=False) %}
+<div class="col-sm-3 {% if not first %}col-padding{% endif %}">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{ title }}</h3>
+    </div>
+    <div class="panel-body">
+      <p>
+        <i class="fa {{ icon }}" aria-hidden="true"></i>
+        {{ text }}
+        <br>
+        <span class="pull-right">
+          <a href="{{ url }}" title="Read more about {{ title }}">Read more</a>
+        </span>
+      </p>
+    </div>
+  </div>
+</div>
+{% endmacro %}

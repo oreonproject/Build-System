@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% from "_helpers.html" import status_info, initialize_datatables, build_state_text  %}
+
+{% block title %} Task queue - Copr {% endblock %}
+{% block header %} Task queue - Copr {% endblock %}
+{%block main_menu_status %}active{% endblock %}
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li>
+    <a href="{{ url_for('coprs_ns.coprs_show') }}">Home</a>
+  </li>
+  <li>
+    <a href="{{ url_for('status_ns.pending') }}">Status</a>
+  </li>
+{%block status_breadcrumb %}
+  <li>
+      {{ state_of_tasks }}
+  </li>
+{%endblock%}
+</ol>
+{% endblock %}
+{% block body %}
+<h1> Task queue </h1>
+<ul class="nav nav-tabs">
+  {% for state in ["importing", "pending", "starting", "running", "batches"] %}
+  <li {% if state_of_tasks == state %}class="active"{% endif %}>
+      <a href="{{ url_for('status_ns.' + state ) }}">
+          {{ state|capitalize }}
+          <span class="badge">{{ queue_sizes[state] }}</span>
+      </a>
+  </li>
+  {% endfor %}
+
+  <li class="{% block stats_selected %}{% endblock %}">
+      <a href="{{ url_for('status_ns.stats') }}">Statistics</a>
+  </li>
+
+  {% if config.RESALLOC_URL %}
+  <li>
+      <a href="{{ config.RESALLOC_URL }}">Resources</a>
+  </li>
+  {% endif %}
+
+</ul>
+
+{% block status_body %}
+{% set bg = "" if not bg_tasks_cnt else "(+ {} others with lower priority)".format(bg_tasks_cnt) %}
+<h2>
+    {% if number == 0 %}
+      No tasks {{ bg }} are
+    {% elif number == 1 %}
+      {{ number }} task {{ bg }} is
+    {% else %}
+      {{ number }} tasks {{ bg}} are
+    {% endif %}
+    in the {{ state_of_tasks }} state.
+</h2>
+{% if state_of_tasks == "pending" %}
+<p>See more <a href="{{ url_for('status_ns.pending_all') }}">detailed</a> statistics.</p>
+{% endif %}
+<p>{{ build_state_text(state_of_tasks) }} - {{ state_of_tasks|build_state_description }}</p>
+{{ status_info(type=state_of_tasks, tasks=tasks) }}
+{{ initialize_datatables(order="desc") }}
+{% endblock %}
+{% endblock %}

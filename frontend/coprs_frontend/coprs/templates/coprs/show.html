@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Project List{% endblock %}
+{% block header %}Project List{% endblock %}
+{% from "_helpers.html" import render_pagination, copr_details_href, copr_name, user_projects_panel %}
+{% from "_helpers.html" import recent_builds_panel, task_queue_panel, recent_blog_panel, friendly_os_name %}
+{% from "_helpers.html" import render_project_box, render_search_bar, projects_header %}
+{%block main_menu_projects %}active{% endblock %}
+{% block body %}
+<div class="row">
+  <div class="col-md-9 col-sm-8">
+  {% block content %}
+    {% block show_top %}
+    {% endblock %}
+
+    {% block projects_header %}
+    {% endblock %}
+
+    <div class="panel panel-default">
+      <div class="list-group">
+      {% block projects %}
+      {% for copr in pinned + coprs %}
+        {{ render_project_box(copr, pinned=copr in pinned) }}
+      {% else %}
+        <p>No projects...</p>
+      {% endfor %}
+      {% endblock %}
+      </div>
+    </div>
+    {{ render_pagination(request, paginator) }}
+  {% endblock %}
+
+  </div>
+  <div class="col-md-3 col-sm-4">
+    <br>
+    {% if g.user %}
+      {{ user_projects_panel(g.user) }}
+    {% endif %}
+
+    {{ recent_blog_panel() }}
+    {{ task_queue_panel(tasks_info, graph) }}
+    {{ recent_builds_panel(users_builds) }}
+
+  </div>
+</div>
+{% endblock %}
+{% block footer %}
+<script src="{{ url_for('static', filename='components/c3/c3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='components/d3/d3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphs.js') }}"></script>
+<script>smallGraph({{ graph|tojson }}, "#small-graph");</script>
+{% endblock %}

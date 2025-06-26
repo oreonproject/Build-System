@@ -1,0 +1,108 @@
+[backend]
+# URL where are results visible
+# default is http://copr-be
+results_baseurl=https://copr-be.cloud.fedoraproject.org/results
+
+# Mandatory http address of running Copr Frontend instance.  Backend talks to
+# Frontend e.g. over <frontend_base_url>/backend/ URL.
+# default is http://copr-fe
+frontend_base_url=http://copr.stg.fedoraproject.org
+
+# must have same value as BACKEND_PASSWORD from have frontend in /etc/copr/copr.conf
+# default is PASSWORDHERE but you really should change it. really.
+frontend_auth=backend_password_from_fe_config
+
+# directory where results are stored
+# should be accessible from web using 'results_baseurl' URL
+# no default
+destdir=/var/lib/copr/public_html/results
+
+# Periodically generated statistics/graphs go here
+statsdir=/var/lib/copr/public_html/stats
+
+# how long (in seconds) backend should wait before query frontends
+# for new tasks in queue
+# default is 10
+sleeptime=30
+
+# Builder machine allocation is done by resalloc server listening on
+# this address.
+#resalloc_connection=http://localhost:49100
+
+# Maximum number of concurrent background builder processes.  Note that
+# the background process doesn't have the builder machine allocated all
+# the time but only as long as really needed.  To control the number of
+# builder machines please configure resalloc server, see the
+# 'resalloc_connection' config option.
+# This option basically controls the amount of RAM allocated for
+# processing builds on copr backend, and how many resalloc tickets can
+# be taken at the same time.
+#builds_max_workers=60
+
+# Maximum number of concurrently running tasks per architecture.
+#builds_max_workers_arch=x86_64=10,ppc64le=12
+
+# Maximum number of concurrent build workers per architecture and owner.  For
+# example, give at most 15 ppc64le and 10 s390x machines to one copr owner:
+#builds_max_workers_arch_per_owner=ppc64le=15,s390x=10
+
+# Maximum number of concurrently running tasks per project owner.
+#builds_max_workers_owner=20
+
+# Maximum number of concurrently running tasks per build sandbox.
+#builds_max_workers_sandbox=10
+
+# Maximum number of concurrently running tasks per a build tag.
+#builds_max_workers_tag=Power9=5,Power8=10
+
+# Maximum number of concurrent background processes spawned for handling
+# actions.
+#actions_max_workers=10
+
+# publish fedmsg notifications from workers if true
+#fedmsg_enabled=false
+
+# enable package signing, require configured
+# signer host and correct /etc/sign.conf
+#do_sign=false
+
+# host or ip of machine with copr-keygen
+# usually the same as in /etc/sign.conf
+#keygen_host=example.com
+
+# minimum age for builds to be pruned
+prune_days=14
+
+# Number of prunerepo workers spawned in parallel (started by
+# copr_prune_results.py).  By default `os.cpu_count()` is used, per
+# multiprocessing.Pool defaults.
+#prune_workers = 16
+
+# logging settings
+#log_dir=/var/log/copr-backend/
+#log_level=info
+#log_format=[%(asctime)s][%(levelname)6s][PID:%(process)d][%(name)10s][%(filename)s:%(funcName)s:%(lineno)d] %(message)s
+
+# Configure the mandatory access to a running Redis DB instance.
+#redis_host=127.0.0.1
+#redis_port=6379
+#redis_db=0
+
+# AWS CloudFront distribution ID.  In some cases we might want to invalidate
+# some CDN caches (e.g. when RPMs in repository are re-signed).
+#aws_cloudfront_distribution=EX55ITR8LVMOH
+
+# the domain name of the auto-generated sign key
+# e.g. format: user#projectname@copr.{sign_domain}
+#sign_domain=fedorahosted.org
+
+[builder]
+# default is 1800
+timeout=3600
+
+
+[ssh]
+# SSH config file which is used by backend when communicating with allocated
+# builders.  By default this is not set so we let the decision on the ssh
+# implementation itself (usually it uses '<home directory>/.ssh/config' file).
+#builder_config=/home/copr/.ssh/config

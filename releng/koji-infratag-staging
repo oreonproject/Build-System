@@ -1,0 +1,68 @@
+#! /bin/bash
+
+set -e
+
+usage()
+{
+    cat >&2 <<EOF
+usage: $0 NVR [NVR ...]
+
+Tag NVRs to proper infra staging repo.  The NVR must reference existing
+non-scratch build in Koji.
+
+Note that Koji suffers from race condition issues, and if you specify multiple
+NVRs - each is submitted to Koji as a separate task.  Such tasks are processed
+concurrently, and due to the race the final repository might miss some of the
+packages.  WORKAROUND: Submit all NVRs at once, wait a few minutes, and submit
+again.
+EOF
+}
+die() { echo >&2 "FATAL: $*"; exit 1; }
+
+test -n "$1" || { usage && exit 1 ; }
+
+where_to=STAGE
+case $(basename "$0") in
+*move-prod)
+    where_to=PROD
+    ;;
+esac
+
+distros=
+for build; do
+
+    case $build in
+    *fc[0-9][0-9])
+        distro=f
+        distro_version=${build//*fc/}
+        ;;
+    *el[0-9]|*el[0-9][0-9])
+        distro=epel
+        distro_version=${build//*el/}
+        ;;
+    *) die "Unknown build: $build" ;;
+    esac
+
+    case $distro_version in
+        [0-9][0-9]|[0-9]) ;;
+        *) die "wrong $distro id '$distro_version'" ;;
+    esac
+
+    id=${distro}$distro_version
+    case $distros in
+    *" $id "*) ;;  # already in
+    *) distros="$distros $id "
+    esac
+
+    eval "distro_$id=\"\$distro_$id $build\""
+done
+
+for distro in $distros; do
+    eval "builds=\$distro_$distro"
+    echo "Infra $where_to $distro -> $builds"
+    if test $where_to = STAGE; then
+        koji tag-build "$distro-infra-candidate" $builds
+    else
+        koji move "$distro"-infra-stg "$distro"-infra $builds
+    fi
+done

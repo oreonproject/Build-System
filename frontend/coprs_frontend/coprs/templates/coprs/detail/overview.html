@@ -1,0 +1,244 @@
+{% extends "coprs/detail.html" %}
+
+{% from "coprs/_coprs_forms.html" import copr_legal_flag_form with context %}
+{% from "_helpers.html" import os_logo, friendly_os_name, copr_name, copr_url, build_href, repo_file_href %}
+
+{% set selected_tab = "overview" %}
+
+{%block project_breadcrumb %}
+<li class="active">
+  Overview
+</li>
+{%endblock%}
+
+{% block detail_body %}
+<div class="row">
+  <div class="col-sm-8 col-md-9">
+    <h3>Description</h3>
+    <p>{{ copr.description|markdown|default(
+            'Description not filled in by author.
+             Very likely personal repository for testing purpose,
+             which you should not use.', true) }}
+    </p>
+
+
+    <h3>Installation Instructions</h3>
+    <p>{{ copr.instructions|markdown|default(
+            'Instructions not filled in by author.
+             Author knows what to do.
+             Everybody else should avoid this repo.', true) }}
+    </p>
+
+    <h3>Active Releases</h3>
+    <p>
+        The following unofficial repositories are provided as-is
+        by owner of this project.
+        Contact the owner directly for bugs or issues (IE: not bugzilla).
+    </p>
+
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Release</th>
+          <th>Architectures</th>
+          <th>Repo Download</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for repo in repos_info_list %}
+        <tr>
+          <td>
+            {{ os_logo(repo.logo) }}
+            {{ friendly_os_name(repo.os_release, repo.os_version) }}
+          </td>
+          <td>
+            {% for arch in repo.arch_list %}
+              {{ arch }}
+              {% if copr.is_release_arch_modified(repo.name_release, arch) %}
+              <a id="modified-chroot-{{repo.name_release}}-{{arch}}">[modified]</a>
+              {% endif %}
+              <small class="text-muted"> ({{ repo.rpm_dl_stat[arch] }})*</small>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+          <td class="rightmost">
+            <a class="btn btn-default btn-margin" href="{{ repo_file_href(copr, repo) }}">
+              <span class="pficon pficon-save"></span> {{ friendly_os_name(repo.os_release, repo.os_version) }}
+            </a>
+            {% if repo.arch_repos %}
+              {% for arch in repo.arch_repos %}
+                <a class="btn btn-default btn-margin" href="{{ repo_file_href(copr, repo, arch) }}">
+                    <span class="pficon pficon-save"></span> multilib {{ arch }}+{{ repo.arch_repos[arch] }}
+                </a>
+              {% endfor %}
+            {% endif %}
+            <small class="text-muted"> ({{ repo.dl_stat }} downloads) </small>
+            <span class="pull-right">
+              {% if repo.delete_reason %}
+              <i class="fa fa-trash-o fa-2x" aria-hidden="true" title="{{ repo.delete_reason }}"></i>
+              {% endif %}
+            </span>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="text-muted"><small> * Total number of downloaded packages.</small></p>
+
+    {% if copr.repos_list %}
+    <h3>External Repository List</h3>
+    <p> The following repositories are accessible during builds </p>
+    <ul class=repos-list>
+      {% for repo in copr.repos_list %}
+        <li><a href="{{ repo|repo_url }}">{{ repo }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if copr.runtime_deps %}
+    <h3>Runtime Dependency List</h3>
+    <p> The following repositories are used as runtime dependencies </p>
+    <ul class=repos-list>
+      {% for repo in copr.runtime_deps %}
+        <li><a href="{{ repo|repo_url }}">{{ repo }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+
+{% for name, overrides  in copr.modified_chroots.items() %}
+<div id="dialog-{{name}}" class="repos-list" style="display: none;">
+<h3>Modified {{ name }}:</h3>
+<ul>
+    {% for label, config in overrides.items() %}
+    <li>{{ label }}: <strong>{{ config }}</strong></li>
+    {% endfor %}
+</ul>
+<script>
+  $("#modified-chroot-{{name}}").click(function(){
+    $("#dialog-{{name}}").toggle();
+  });
+</script>
+</div>
+{% endfor %}
+
+
+    {% if config.ENABLE_DISCUSSION %}
+    {% if config.DISCOURSE_URL %}
+    <div id='discourse-comments'></div>
+
+    <script type="text/javascript">
+      DiscourseEmbed = { discourseUrl: '{{ config.DISCOURSE_URL }}',
+                         discourseEmbedUrl: '{{ copr_url('coprs_ns.copr_detail', copr, _external=True) }}' };
+
+      (function() {
+        var d = document.createElement('script'); d.type = 'text/javascript'; d.async = true;
+        d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(d);
+      })();
+    </script>
+    {% endif %}
+    {% endif %}
+
+  </div>
+  <div class="col-sm-4 col-md-3">
+    <br>
+    {% if copr.homepage or copr.contact %}
+      <div class="panel panel-default">
+        <div class="panel-body">
+          {% if copr.homepage %}
+          <a class="btn btn-default" href="{{ copr.homepage }}" title="{{ copr.homepage }}">
+            <span class="fa fa-home"></span> Homepage
+          </a>
+          {% endif %}
+
+          {% if copr.contact %}
+          <a class="btn btn-default" href="{{ copr.contact|mailto }}" title="{{ copr.contact }}">
+            <span class="fa fa-user"></span> Contact
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"> Last Build </h3>
+      </div>
+    {% if latest_build %}
+      <div class="list-group">
+        <a href="{{ build_href(latest_build) }}" class="list-group-item">
+          <h4 class="list-group-item-heading">{{latest_build.package.name}}</h4>
+          <p class="list-group-item-text">
+            <small> Build: </small>
+            {{ latest_build.id }}
+          </p>
+          <p class="list-group-item-text">
+            <small> State: </small>
+            <span class="build-{{latest_build.state}}">
+              {{ latest_build.state }}
+            </span>
+          </p>
+          <p class="list-group-item-text">
+            <small> Finished: </small>
+            {{latest_build.max_ended_on|time_ago()}} ago
+          </p>
+        </a>
+      </div>
+    {% else %}
+      <div class="panel-body">
+        <p> No builds... </p>
+      </div>
+    {% endif %}
+    </div>
+
+    {% if not config.LAYOUT_OVERVIEW_HIDE_QUICK_ENABLE %}
+    <div class="panel panel-default">
+      {% include 'quick_enable.html' %}
+    </div>
+    {% endif %}
+
+    {% if g.user and g.user.can_edit(copr) and copr and copr.owner %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"> Regenerate Repositories </h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{url_for('coprs_ns.copr_createrepo', copr_id=copr.id)}}" method="post" >
+          <button class="btn btn-default" type="submit">
+            <span class="fa fa-refresh"> Regenerate</span></button>
+        </form>
+        <br>
+        {% if not copr.auto_createrepo %}
+        <small><span class="pficon pficon-info text-muted"></span> Package repositories are not generated automatically after each build. You can change this setting on the Edit page</small>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"> Other Actions </h3>
+      </div>
+      <div class="panel-body">
+
+        {% if g.user %}
+        <div class="btn-group">
+          <a href="{{ copr_url('coprs_ns.copr_fork', copr) }}" class="btn btn-default">
+            <i class="fa fa-code-fork"></i> Fork this project
+          </a>
+          <a href="{{ copr_url('coprs_ns.copr_forks', copr) }}" class="btn btn-default">
+            {{ copr.forks | count }}
+          </a>
+        </div>
+        <br>
+        {% endif %}
+
+        <a href="{{ copr_url('coprs_ns.copr_report_abuse', copr) }}">
+          <small><span class="pficon pficon-warning-triangle-o"></span> Report Abuse </small>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "coprs/detail.html" %}
+{% from "_helpers.html" import render_field, copr_url, copr_name,
+    render_bootstrap_options %}
+
+{% block title %}Editing {{ copr_name(copr) }}/{{ chroot.name }}{% endblock %}
+{%block project_breadcrumb%}
+<li>
+  <a href="{{ copr_url('coprs_ns.copr_edit', copr) }}">
+    Edit
+  </a>
+</li>
+<li class="active">
+  {{ chroot.name }}
+</li>
+{%endblock%}
+
+{% block detail_body %}
+  <h2>Edit chroot '{{ chroot.name }}'</h2>
+
+  <form action="{{ copr_url('coprs_ns.chroot_update', copr, chrootname=chroot.name) }}"
+        method="post" class="form-horizontal"
+        enctype=multipart/form-data
+      >
+    {{ form.csrf_token }}
+
+    {{ render_field(
+        form.buildroot_pkgs,
+        size=80,
+        info='You can add additional packages to the minimal buildroot of this chroot. These packages will be always present before the build starts. ',
+        placeholder='Space separated list of packages. E.g.: scl-utils-build ruby193-build'
+       )
+    }}
+
+    {{ render_field(form.repos, rows=5, cols=50, placeholder='Optional - URL to additional yum repos, which can be used during build. Space separated. This should be baseurl from .repo file. E.g.: http://copr-be.cloud.fedoraproject.org/results/rhughes/f20-gnome-3-12/fedora-$releasever-$basearch/') }}
+
+    {{ render_field(
+        form.module_toggle,
+        size=80,
+        info='You can specify modules which will be enabled or disabled for builds in the given chroot.',
+        placeholder='Comma separated list of modules, e.g. module:stream, !module1:stream1'
+       )
+    }}
+
+    {{ render_field(
+        form.with_opts,
+        size=80,
+        info='You can specify rpmbuild --with options here for builds in the given chroot.',
+        placeholder='Space separated list of the rpmbuild with options'
+       )
+    }}
+
+    {{ render_field(
+        form.without_opts,
+        size=80,
+        info='You can specify rpmbuild --without options here for builds in the given chroot.',
+        placeholder='Space separated list of the rpmbuild without options'
+       )
+    }}
+
+    {{ render_bootstrap_options(form) }}
+
+    {{ render_field(form.isolation, placeholder='unchanged') }}
+
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="textInput-markup">
+        comps.xml
+      </label>
+      <div class="col-sm-10">
+        {{ form.comps }}
+        {% if chroot.comps_name %}
+          Stored comps file:
+            <a href="{{ copr_url('coprs_ns.chroot_view_comps', copr, chrootname=chroot.name) }}">{{ chroot.comps_name}}</a>
+            <br />
+          <button class="btn btn-default" type="submit" value="delete_comps" name="submit">
+            <span class="pficon pficon-delete"></span> Delete
+          </button>
+        {% endif %}
+        <li class="help-block">
+        <small><span class="text-muted pficon pficon-info"></span>
+          If you would like to provide grouping meta information,
+          upload your comps.xml here. Please read
+          <a href="https://fedoraproject.org/wiki/How_to_use_and_edit_comps.xml_for_package_groups">
+            the documentation
+          </a>
+          to learn more.
+        </small>
+      </li>
+
+      </div>
+
+    </div>
+
+    <input class="btn btn-primary" type="submit" name="submit" value="update">
+    <a class="btn btn-default" href="{{ copr_url('coprs_ns.copr_edit', copr) }}">Cancel</a>
+  </form>
+
+
+{% endblock %}

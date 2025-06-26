@@ -1,0 +1,32 @@
+[
+{
+    "_description": "url-source test",
+    "_expected_outcome": "success",
+
+    "branches": ["f23"],
+    "project": "example",
+    "srpm_url": "http://localhost:5000/static/example-1.0.5-1.fc23.src.rpm",
+    "build_id": 1,
+    "owner": "clime"
+},
+{
+    "_description": "url-source test for a different branch",
+    "_expected_outcome": "success",
+
+    "branches": ["master"],
+    "project": "example",
+    "srpm_url": "http://localhost:5000/static/example-1.0.5-1.fc23.src.rpm",
+    "build_id": 2,
+    "owner": "clime"
+},
+{
+    "_description": "upload-source test",
+    "_expected_outcome": "success",
+
+    "branches": ["master"],
+    "project": "example",
+    "srpm_url": "http://localhost:5000/static/tmp2hagml/example-1.0.5-1.fc23.src.rpm",
+    "build_id": 3,
+    "owner": "clime"
+}
+]

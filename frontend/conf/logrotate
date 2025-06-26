@@ -1,0 +1,11 @@
+# logrotation file for Copr frontend
+
+/var/log/copr-frontend/*.log {
+    weekly
+    rotate 6
+    copytruncate
+    compress
+    notifempty
+    missingok
+    create 644 copr-fe copr-fe
+}
