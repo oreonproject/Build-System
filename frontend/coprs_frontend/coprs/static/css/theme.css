@@ -1,0 +1,21 @@
+/* Oreon Theme Overrides */
+
+/* Fix purple link color */
+a {
+  color: #000000;
+}
+
+/* Fix button and active element colors */
+.btn-primary {
+  background-color: #000000;
+  border-color: #000000;
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    color: #000000;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    border-bottom-color: transparent;
+} 

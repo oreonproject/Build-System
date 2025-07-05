@@ -9,6 +9,7 @@
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
   <link href="{{ url_for('system_static', component='patternfly', filename='css/patternfly.min.css') }}" rel="stylesheet" media="screen, print">
   <link rel="stylesheet" href="{{ url_for('system_static', component='patternfly', filename='css/patternfly-additions.min.css') }}">
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/theme.css') }}">
   <script src="{{ url_for('system_static', component='jquery', filename='3/jquery.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='jquery-ui', filename='jquery-ui.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='bootstrap_scss', filename='js/bootstrap.min.js') }}"></script>
@@ -23,58 +24,66 @@
       {{ copr_banner | safe }}
   {% endif  %}
 
-  <!-- MAIN MENU -->
-  <nav class="" id="main-bar">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-sm-7 col-xs-6">
-          <a href="{{ url_for('coprs_ns.coprs_show') }}">
-            <img id="logo" src="{{ url_for('static', filename='oreon_logo.png') }}" alt="Oreon Build System">
-          </a>
-        </div>
-        <div class="col-md-4 col-sm-5 col-xs-6">
-          <div id="login-menu" class="text-right">
-
+  <!-- MAIN NAVIGATION -->
+    <nav class="navbar navbar-pf" role="navigation">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="{{ url_for('coprs_ns.coprs_show') }}">
+          <img src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" />
+        </a>
+      </div>
+      <div class="collapse navbar-collapse navbar-collapse-1">
+        <ul class="nav navbar-nav navbar-primary">
+            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
+                <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
+            </li>
+            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
+                <a href="{{ url_for('iso_ns.iso_index') }}"><i class="pficon pficon-image"></i> ISO Builder</a>
+            </li>
+            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
+                <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-utility">
           {% for item in login_menu %}
-          <a href="{{ item.link }}">{{ item.desc }}</a>
-          {% if not loop.last %}|{% endif %}
+          <li><a href="{{ item.link }}">{{ item.desc }}</a></li>
           {% endfor %}
-
-          </div>
+        </ul>
+        <div class="navbar-right">
           {{ render_search_bar() }}
         </div>
       </div>
-    </div>
-  </nav>
-  <div class="breadcrumb-panel">
-    <div class="container">
-        {% block breadcrumbs %}
-        {% endblock %}
-    </div>
-  </div>
+    </nav>
 
   <!-- CONTENT -->
-  <div id=content>
-    <div class="container">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-12">
+          <!-- BREADCRUMB NAVIGATION -->
+          {% block breadcrumbs %}
+          {% endblock %}
 
-      <!-- Flash messages -->
-      {% if flashes %}
-        {% for type, message in flashes %}
-          {{ alert(message, type) }}
-        {% endfor %}
-      {% else %}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% for type, message in messages %}
-            {{ alert(message, type) }}
-          {% endfor %}
-        {% endwith %}
-      {% endif %}
+          <!-- MAIN CONTENT -->
+          <div id="content">
+            <!-- Flash messages -->
+            {% if flashes %}
+              {% for type, message in flashes %}
+                {{ alert(message, type) }}
+              {% endfor %}
+            {% else %}
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for type, message in messages %}
+                  {{ alert(message, type) }}
+                {% endfor %}
+              {% endwith %}
+            {% endif %}
 
 
 
-      <!-- the actual content -->
-      {% block body %}{% endblock %}
+            <!-- the actual content -->
+            {% block body %}{% endblock %}
 
+          </div>
+      </div>
     </div>
     <footer class="footer">
       <div>
@@ -83,7 +92,6 @@
             <div class="row">
               <div class="col-sm-12 text-center">
                 <dl>
-                  <dt><h3>Site Navigation</h3></dt>
                   <dd>
                     <ul class="list-inline">
                       <li> <a href="{{ url_for('coprs_ns.coprs_show') }}">Home</a> </li>
