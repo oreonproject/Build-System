@@ -14,9 +14,7 @@
   <script src="{{ url_for('system_static', component='bootstrap_scss', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='datatables', filename='js/jquery.dataTables.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='patternfly', filename='js/patternfly.min.js') }}"></script>
-
-  <script src="{{ url_for('static', filename='copr.js') }}"></script>
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='copr.css') }}">
+  <script src="{{ url_for('static', filename='oreon.js') }}"></script>
 </head>
 
 <body>
@@ -31,7 +29,7 @@
       <div class="row">
         <div class="col-md-8 col-sm-7 col-xs-6">
           <a href="{{ url_for('coprs_ns.coprs_show') }}">
-            <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System">
+            <img id="logo" src="{{ url_for('static', filename='oreon_logo.png') }}" alt="Oreon Build System">
           </a>
         </div>
         <div class="col-md-4 col-sm-5 col-xs-6">
@@ -83,92 +81,25 @@
         <div class="container text-muted">
           <div class="">
             <div class="row">
-             <div class="col-sm-2">
-                <dl>
-                  {% include 'contact_us.html' %}
-                </dl>
-              </div>
-              <div class="col-sm-2">
-                <dl>
-                  {% include 'project_info.html' %}
-                </dl>
-              </div>
-              <div class="col-sm-2">
+              <div class="col-sm-12 text-center">
                 <dl>
                   <dt><h3>Site Navigation</h3></dt>
                   <dd>
-                    <ul>
+                    <ul class="list-inline">
                       <li> <a href="{{ url_for('coprs_ns.coprs_show') }}">Home</a> </li>
                       <li> <a href="{{url_for('status_ns.importing')}}">Task Queue</a> </li>
                       <li> <a href="{{ url_for('api_ns.api_home') }}">API</a> </li>
-                      <li> <a href="{{ url_for('user_ns.user_info') }}">GDPR</a> </li>
-                      <li> <a href="{{ url_for('rss_ns.rss') }}">RSS</a> </li>
                       <li> <a href="/db_dumps/">Database Dump</a> </li>
-{% if config.BACKEND_STATS_URI %}
-                      <li><a href="{{ config.BACKEND_BASE_URL }}{{ config.BACKEND_STATS_URI }}">Storage statistics</a> </li>
-{% endif %}
                     </ul>
                   </dd>
-                </dl>
-              </div>
-              <div class="col-sm-2">
-                <dl>
-                  <dt><h3>Powered by</h3></dt>
-                  <dd>
-                    <ul>
-                      <li><a href="https://www.python.org">Python</a></li>
-                      <li><a href="https://www.patternfly.org">PatternFly</a></li>
-                      <li><a href="https://github.com/release-engineering/dist-git">Dist Git</a></li>
-                      <li><a href="https://github.com/praiskup/resalloc">Resalloc</a></li>
-                    </ul>
-                  </dd>
-                </dl>
-              </div>
-              <div class="col-sm-2">
-                <dl>
-                  {% include 'sponsors.html' %}
                 </dl>
               </div>
             </div>
-            <!-- <small class="text-muted">
-              Build __RPM_BUILD_VERSION
-              Build 1.125-1.git.16.4767b3b.fc25
-            </small> -->
           </div>
         </div>
       </div>
     </footer>
   </div>
-
-  <!-- FEDORA MENU -->
-  {% if fedmenu_url is defined %}
-  <script src="{{fedmenu_url}}/js/fedora-libravatar.js"></script>
-  <script src="{{fedmenu_url}}/js/fedmenu.js"></script>
-  <script>
-    fedmenu({
-        'url': '{{fedmenu_data_url}}',
-        'mimeType': 'application/javascript',
-        'position': 'bottom-right',
-        {% if copr is defined %}
-          {% if copr.is_a_group_project %}
-            'user': '{{copr.group.fas_name}}',
-          {% else %}
-            'user': '{{copr.user.name}}',
-          {% endif %}
-        {% endif %}
-    });
-  </script>
-  {% endif %}
-  <!-- Last post from our blog -->
-  {% if config.NEWS_URL and config.NEWS_FEED_URL %}
-  <script src="{{ url_for('static', filename='js/blog.js') }}"></script>
-  <script>
-    $(document).ready(function(){
-      show_last_articles("{{ config.NEWS_FEED_URL }}", 2)
-      $(".show-me-javascript").removeClass("hidden");
-    });
-  </script>
-  {% endif %}
 
   {% block footer %}{% endblock %}
 </body>
