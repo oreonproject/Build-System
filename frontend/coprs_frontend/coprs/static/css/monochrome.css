@@ -1,46 +1,101 @@
-/* Monochrome theme overrides */
-body {
-  background:#ffffff;
-  color:#000000;
-  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+/* Strict Monochrome Theme */
+body, .oreon-body, .oreon-main-content, .oreon-footer {
+  background: #fff !important;
+  color: #000 !important;
+  font-family: Arial, Helvetica, sans-serif;
+  box-shadow: none !important;
 }
 
-/* Header / navbar */
-.oreon-navbar, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active {
-  background:#000000;
-  color:#ffffff;
+.oreon-navbar, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active, .panel, .panel-heading, .footer-section, .footer-bottom {
+  background: #000 !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-.oreon-navbar .nav-link, .oreon-nav-tabs .nav-link {
-  color:#ffffff;
-}
-.oreon-navbar .nav-link:hover, .oreon-nav-tabs .nav-link:hover {
-  color:#dddddd;
-}
-
-.brand-text { color:#ffffff; }
-
-/* Buttons */
-.btn, .nav-link {
-  border-radius:0;
+.oreon-navbar .nav-link, .oreon-nav-tabs .nav-link, .footer-links a, .brand-text, .oreon-navbar a, .oreon-nav-controls a {
+  color: #fff !important;
+  background: none !important;
+  text-shadow: none !important;
 }
 
-/* Remove gradients / shadows */
-.oreon-body, .oreon-main-content, .oreon-footer {
-  background:#ffffff;
-  box-shadow:none;
+.oreon-navbar .nav-link:hover, .oreon-nav-tabs .nav-link:hover, .footer-links a:hover {
+  color: #bbb !important;
 }
 
-/* Links */
-a { color:#000000; }
-a:hover { color:#555555; }
-
-/* Task-queue panel colours */
-.panel, .panel-heading {
-  background:#ffffff;
-  border-color:#000000;
-  color:#000000;
+.brand-logo {
+  height: 40px;
+  width: auto;
+  margin-right: 10px;
+  vertical-align: middle;
+  background: none !important;
+  box-shadow: none !important;
 }
 
-/* Hide purple top border if present */
-body::before { content:none; } 
+.brand-tagline, .footer-tagline, .footer-title, .footer-copyright {
+  color: #000 !important;
+  background: none !important;
+}
+
+.panel, .panel-heading, .panel-default, .panel-title, .panel-body {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+input, select, textarea, .form-control {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+}
+
+.btn, .nav-link, .oreon-search-container input, .oreon-search-container button {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.btn:hover, .nav-link:hover, .oreon-search-container input:hover, .oreon-search-container button:hover {
+  background: #eee !important;
+  color: #000 !important;
+}
+
+a { color: #000 !important; }
+a:hover { color: #555 !important; }
+
+/* Remove all colored icons */
+.fa, .pficon, .glyphicon {
+  color: #000 !important;
+}
+
+/* Remove all border radii and shadows */
+*, *:before, *:after {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Remove any remaining purple/blue backgrounds */
+body::before, .oreon-main-content::before, .oreon-footer::before {
+  background: none !important;
+  content: none !important;
+}
+
+/* Remove floating card look */
+.oreon-main-content, .panel, .panel-default {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Remove extra padding/margins */
+.container, .container-fluid, .row, .col-md-*, .col-sm-*, .col-xs-*, .panel, .panel-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Make everything flat and minimal */ 
