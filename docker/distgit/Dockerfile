@@ -41,10 +41,11 @@ RUN chown copr-dist-git:copr-dist-git /var/lock/copr-dist-git/
 COPY files/ /
 RUN chmod 644 /etc/copr/copr-dist-git.conf
 
-RUN echo " [user]" >> /home/copr-dist-git/.gitconfig && \
+RUN mkdir -p /home/copr-dist-git && \
+    echo " [user]" >> /home/copr-dist-git/.gitconfig && \
     echo " email = copr-devel@lists.fedorahosted.org" >> /home/copr-dist-git/.gitconfig && \
     echo " name = Copr dist git" >> /home/copr-dist-git/.gitconfig && \
-    chown copr-dist-git:copr-dist-git /home/copr-dist-git/.gitconfig
+    chown -R copr-dist-git:copr-dist-git /home/copr-dist-git
 
 RUN sed -i "s/^cache-size.*//" /etc/cgitrc
 RUN echo 'scan-path=/var/lib/dist-git/git/rpms' | tee -a /etc/cgitrc
