@@ -1,0 +1,46 @@
+/* Monochrome theme overrides */
+body {
+  background:#ffffff;
+  color:#000000;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+/* Header / navbar */
+.oreon-navbar, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active {
+  background:#000000;
+  color:#ffffff;
+}
+
+.oreon-navbar .nav-link, .oreon-nav-tabs .nav-link {
+  color:#ffffff;
+}
+.oreon-navbar .nav-link:hover, .oreon-nav-tabs .nav-link:hover {
+  color:#dddddd;
+}
+
+.brand-text { color:#ffffff; }
+
+/* Buttons */
+.btn, .nav-link {
+  border-radius:0;
+}
+
+/* Remove gradients / shadows */
+.oreon-body, .oreon-main-content, .oreon-footer {
+  background:#ffffff;
+  box-shadow:none;
+}
+
+/* Links */
+a { color:#000000; }
+a:hover { color:#555555; }
+
+/* Task-queue panel colours */
+.panel, .panel-heading {
+  background:#ffffff;
+  border-color:#000000;
+  color:#000000;
+}
+
+/* Hide purple top border if present */
+body::before { content:none; } 

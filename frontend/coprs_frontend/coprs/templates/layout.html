@@ -16,11 +16,8 @@
   <link rel="stylesheet" href="{{ url_for('system_static', component='patternfly', filename='css/patternfly-additions.min.css') }}">
   
   <!-- Custom Oreon Build System Styles -->
-  <link href="{{ url_for('static', filename='css/oreon-modern.css') }}" rel="stylesheet" media="screen, print">
-  <link href="{{ url_for('static', filename='css/custom-styles.css') }}" rel="stylesheet" media="screen, print">
+  <link href="{{ url_for('static', filename='css/monochrome.css') }}" rel="stylesheet" media="screen, print">
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='oreon.css') }}">
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style-overwrite.css') }}">
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/oreon-flavor.css') }}">
   
   <!-- JavaScript Dependencies -->
   <script src="{{ url_for('system_static', component='jquery', filename='3/jquery.min.js') }}"></script>
@@ -44,7 +41,7 @@
         <div class="col-md-8 col-sm-7 col-xs-6">
           <div class="oreon-brand">
             <a href="{{ url_for('coprs_ns.coprs_show') }}" class="brand-link">
-              <img id="logo" src="{{ url_for('static', filename='oreon_logo.png') }}" alt="Oreon Build System" class="brand-logo">
+              <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" class="brand-logo">
               <span class="brand-text">Oreon Build System</span>
             </a>
             <span class="brand-tagline">Modern Package & ISO Builder</span>
