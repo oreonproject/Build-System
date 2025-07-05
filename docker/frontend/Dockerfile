@@ -27,24 +27,10 @@ RUN set -ex ; \
                    redis \
                    mock-core-configs \
                    findutils \
+                   copr-frontend \
                    modulemd-tools \
                    python3-authlib \
-                   python3-flask \
-                   python3-flask-sqlalchemy \
-                   python3-flask-wtf \
-                   python3-flask-openid \
-                   python3-flask-whooshee \
-                   python3-flask-session \
-                   python3-werkzeug \
-                   python3-requests \
-                   python3-munch \
-                   python3-psycopg2 \
-                   python3-redis \
     && dnf clean all
-
-# Copy custom Oreon Build System files
-COPY ../../frontend/coprs_frontend /usr/share/copr/coprs_frontend
-COPY ../../common/copr_common /usr/lib/python3.11/site-packages/copr_common
 
 COPY files/ /
 

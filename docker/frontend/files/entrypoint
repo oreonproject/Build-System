@@ -1,5 +1,22 @@
 #! /bin/sh
 
+# Copy custom Oreon Build System files from mounted volume
+echo "Setting up Oreon Build System custom files..."
+if [ -d "/opt/copr/frontend/coprs_frontend" ]; then
+    echo "Copying custom frontend files..."
+    cp -r /opt/copr/frontend/coprs_frontend/* /usr/share/copr/coprs_frontend/
+fi
+
+if [ -d "/opt/copr/common/copr_common" ]; then
+    echo "Installing custom common library..."
+    cp -r /opt/copr/common/copr_common /usr/lib/python3.11/site-packages/
+fi
+
+# Copy local auth files
+cp /usr/share/copr/local_auth.py /usr/share/copr/coprs_frontend/
+cp /usr/share/copr/local_routes.py /usr/share/copr/coprs_frontend/
+cp /usr/share/copr/auth_patch.py /usr/share/copr/coprs_frontend/
+
 cd /usr/share/copr/coprs_frontend/
 
 # Initialize database
@@ -11,14 +28,16 @@ cd /usr/share/copr/coprs_frontend/
 # Initialize Oreon Build System local authentication
 python3 -c "
 import sys
-sys.path.insert(0, '/usr/share/copr')
+sys.path.insert(0, '/usr/share/copr/coprs_frontend')
 
-# Initialize local authentication
+# Import the app first
+from coprs import app, db
+
+# Then import local auth modules
+sys.path.insert(0, '/usr/share/copr/coprs_frontend')
 from local_auth import init_local_auth
 from local_routes import register_local_auth_routes
 import auth_patch
-
-from coprs import app, db
 
 with app.app_context():
     # Register local auth routes
