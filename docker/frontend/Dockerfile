@@ -28,6 +28,7 @@ RUN set -ex ; \
                    mock-core-configs \
                    findutils \
                    copr-frontend \
+                   python3-flask-login \
                    modulemd-tools \
                    python3-authlib \
     && dnf clean all
