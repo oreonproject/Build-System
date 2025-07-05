@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <title>{% block title %}Oreon Build System{% endblock %}</title>
-  <meta charset="utf-t">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Modern automated build system for Oreon Linux - Build RPM packages and ISO images with ease">
   
@@ -15,9 +15,6 @@
   <link href="{{ url_for('system_static', component='patternfly', filename='css/patternfly.min.css') }}" rel="stylesheet" media="screen, print">
   <link rel="stylesheet" href="{{ url_for('system_static', component='patternfly', filename='css/patternfly-additions.min.css') }}">
   
-  <!-- Clean Monochrome Theme -->
-  <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet" media="screen, print">
-
   <!-- JavaScript Dependencies -->
   <script src="{{ url_for('system_static', component='jquery', filename='3/jquery.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='jquery-ui', filename='jquery-ui.min.js') }}"></script>
@@ -54,40 +51,44 @@
   </nav>
 
   <div class="container-fluid">
-      <ul class="nav nav-tabs">
-          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
-              <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
-          </li>
-          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
-              <a href="{{ url_for('iso_ns.iso_index') }}">ISO Builder</a>
-          </li>
-          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
-              <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
-          </li>
-      </ul>
+    <div class="row">
+      <div class="col-sm-12">
+          <ul class="nav nav-tabs">
+              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
+                  <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
+              </li>
+              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
+                  <a href="{{ url_for('iso_ns.iso_index') }}">ISO Builder</a>
+              </li>
+              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
+                  <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
+              </li>
+          </ul>
 
-      <!-- BREADCRUMB NAVIGATION -->
-      {% block breadcrumbs %}
-      {% endblock %}
+          <!-- BREADCRUMB NAVIGATION -->
+          {% block breadcrumbs %}
+          {% endblock %}
 
-      <!-- MAIN CONTENT -->
-      <div id="content">
-        <!-- Flash Messages -->
-        {% if flashes %}
-          {% for type, message in flashes %}
-            {{ alert(message, type) }}
-          {% endfor %}
-        {% else %}
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for type, message in messages %}
-              {{ alert(message, type) }}
-            {% endfor %}
-          {% endwith %}
-        {% endif %}
+          <!-- MAIN CONTENT -->
+          <div id="content">
+            <!-- Flash Messages -->
+            {% if flashes %}
+              {% for type, message in flashes %}
+                {{ alert(message, type) }}
+              {% endfor %}
+            {% else %}
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for type, message in messages %}
+                  {{ alert(message, type) }}
+                {% endfor %}
+              {% endwith %}
+            {% endif %}
 
-        <!-- Page Content -->
-        {% block body %}{% endblock %}
+            <!-- Page Content -->
+            {% block body %}{% endblock %}
+          </div>
       </div>
+    </div>
   </div>
 
 
