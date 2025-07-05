@@ -1,118 +1,165 @@
 {% from "_helpers.html" import alert, render_search_bar %}
 
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <title>{% block title %}Oreon Build System{% endblock %}</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="Modern automated build system for Oreon Linux - Build RPM packages and ISO images with ease">
-  
-  <!-- CSS Dependencies -->
   <link rel="stylesheet" href="{{ url_for('system_static', component='jquery-ui', filename='jquery-ui.min.css') }}" />
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/vnd.microsoft.icon">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
   <link href="{{ url_for('system_static', component='patternfly', filename='css/patternfly.min.css') }}" rel="stylesheet" media="screen, print">
   <link rel="stylesheet" href="{{ url_for('system_static', component='patternfly', filename='css/patternfly-additions.min.css') }}">
-  
-  <!-- JavaScript Dependencies -->
   <script src="{{ url_for('system_static', component='jquery', filename='3/jquery.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='jquery-ui', filename='jquery-ui.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='bootstrap_scss', filename='js/bootstrap.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='datatables', filename='js/jquery.dataTables.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='patternfly', filename='js/patternfly.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='oreon.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='copr.js') }}"></script>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='copr.css') }}">
 </head>
 
-<body class="oreon-body">
+<body>
   <!-- BANNER -->
   {% if copr_banner %}
       {{ copr_banner | safe }}
   {% endif  %}
 
-  <!-- MAIN NAVIGATION -->
-  <nav class="navbar navbar-pf" role="navigation">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="{{ url_for('coprs_ns.coprs_show') }}">
-        <img src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" />
-        Oreon Build System
-      </a>
-    </div>
-    <div class="collapse navbar-collapse navbar-collapse-1">
-      <ul class="nav navbar-nav navbar-utility">
-        {% for item in login_menu %}
-        <li><a href="{{ item.link }}">{{ item.desc }}</a></li>
-        {% endfor %}
-      </ul>
-      <div class="navbar-right">
-        {{ render_search_bar() }}
-      </div>
-    </div>
-  </nav>
-
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-sm-12">
-          <ul class="nav nav-tabs">
-              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
-                  <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
-              </li>
-              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
-                  <a href="{{ url_for('iso_ns.iso_index') }}">ISO Builder</a>
-              </li>
-              <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
-                  <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
-              </li>
-          </ul>
-
-          <!-- BREADCRUMB NAVIGATION -->
-          {% block breadcrumbs %}
-          {% endblock %}
-
-          <!-- MAIN CONTENT -->
-          <div id="content">
-            <!-- Flash Messages -->
-            {% if flashes %}
-              {% for type, message in flashes %}
-                {{ alert(message, type) }}
-              {% endfor %}
-            {% else %}
-              {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for type, message in messages %}
-                  {{ alert(message, type) }}
-                {% endfor %}
-              {% endwith %}
-            {% endif %}
-
-            <!-- Page Content -->
-            {% block body %}{% endblock %}
-          </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- FOOTER -->
-  <footer class="footer">
+  <!-- MAIN MENU -->
+  <nav class="" id="main-bar">
     <div class="container">
       <div class="row">
-        <div class="col-sm-12">
-          <p class="text-center">
-            <a href="{{ url_for('coprs_ns.coprs_show') }}">Dashboard</a> |
-            <a href="{{url_for('status_ns.importing')}}">Build Queue</a> |
-            <a href="{{ url_for('api_ns.api_home') }}">API Documentation</a> |
-            <a href="{{ url_for('user_ns.user_info') }}">Privacy Policy</a> |
-            <a href="https://docs.oreon-linux.org">Documentation</a> |
-            <a href="/db_dumps/">Database Dumps</a> |
-            <a href="https://github.com/oreon-linux/oreon-build-system">Source Code</a>
-          </p>
-          <p class="text-center">© 2024 Oreon Linux Project. All rights reserved.</p>
+        <div class="col-md-8 col-sm-7 col-xs-6">
+          <a href="{{ url_for('coprs_ns.coprs_show') }}">
+            <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System">
+          </a>
+        </div>
+        <div class="col-md-4 col-sm-5 col-xs-6">
+          <div id="login-menu" class="text-right">
+
+          {% for item in login_menu %}
+          <a href="{{ item.link }}">{{ item.desc }}</a>
+          {% if not loop.last %}|{% endif %}
+          {% endfor %}
+
+          </div>
+          {{ render_search_bar() }}
         </div>
       </div>
     </div>
-  </footer>
+  </nav>
+  <div class="breadcrumb-panel">
+    <div class="container">
+        {% block breadcrumbs %}
+        {% endblock %}
+    </div>
+  </div>
 
-  <!-- Blog Integration (if enabled) -->
+  <!-- CONTENT -->
+  <div id=content>
+    <div class="container">
+
+      <!-- Flash messages -->
+      {% if flashes %}
+        {% for type, message in flashes %}
+          {{ alert(message, type) }}
+        {% endfor %}
+      {% else %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for type, message in messages %}
+            {{ alert(message, type) }}
+          {% endfor %}
+        {% endwith %}
+      {% endif %}
+
+
+
+      <!-- the actual content -->
+      {% block body %}{% endblock %}
+
+    </div>
+    <footer class="footer">
+      <div>
+        <div class="container text-muted">
+          <div class="">
+            <div class="row">
+             <div class="col-sm-2">
+                <dl>
+                  {% include 'contact_us.html' %}
+                </dl>
+              </div>
+              <div class="col-sm-2">
+                <dl>
+                  {% include 'project_info.html' %}
+                </dl>
+              </div>
+              <div class="col-sm-2">
+                <dl>
+                  <dt><h3>Site Navigation</h3></dt>
+                  <dd>
+                    <ul>
+                      <li> <a href="{{ url_for('coprs_ns.coprs_show') }}">Home</a> </li>
+                      <li> <a href="{{url_for('status_ns.importing')}}">Task Queue</a> </li>
+                      <li> <a href="{{ url_for('api_ns.api_home') }}">API</a> </li>
+                      <li> <a href="{{ url_for('user_ns.user_info') }}">GDPR</a> </li>
+                      <li> <a href="{{ url_for('rss_ns.rss') }}">RSS</a> </li>
+                      <li> <a href="/db_dumps/">Database Dump</a> </li>
+{% if config.BACKEND_STATS_URI %}
+                      <li><a href="{{ config.BACKEND_BASE_URL }}{{ config.BACKEND_STATS_URI }}">Storage statistics</a> </li>
+{% endif %}
+                    </ul>
+                  </dd>
+                </dl>
+              </div>
+              <div class="col-sm-2">
+                <dl>
+                  <dt><h3>Powered by</h3></dt>
+                  <dd>
+                    <ul>
+                      <li><a href="https://www.python.org">Python</a></li>
+                      <li><a href="https://www.patternfly.org">PatternFly</a></li>
+                      <li><a href="https://github.com/release-engineering/dist-git">Dist Git</a></li>
+                      <li><a href="https://github.com/praiskup/resalloc">Resalloc</a></li>
+                    </ul>
+                  </dd>
+                </dl>
+              </div>
+              <div class="col-sm-2">
+                <dl>
+                  {% include 'sponsors.html' %}
+                </dl>
+              </div>
+            </div>
+            <!-- <small class="text-muted">
+              Build __RPM_BUILD_VERSION
+              Build 1.125-1.git.16.4767b3b.fc25
+            </small> -->
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- FEDORA MENU -->
+  {% if fedmenu_url is defined %}
+  <script src="{{fedmenu_url}}/js/fedora-libravatar.js"></script>
+  <script src="{{fedmenu_url}}/js/fedmenu.js"></script>
+  <script>
+    fedmenu({
+        'url': '{{fedmenu_data_url}}',
+        'mimeType': 'application/javascript',
+        'position': 'bottom-right',
+        {% if copr is defined %}
+          {% if copr.is_a_group_project %}
+            'user': '{{copr.group.fas_name}}',
+          {% else %}
+            'user': '{{copr.user.name}}',
+          {% endif %}
+        {% endif %}
+    });
+  </script>
+  {% endif %}
+  <!-- Last post from our blog -->
   {% if config.NEWS_URL and config.NEWS_FEED_URL %}
   <script src="{{ url_for('static', filename='js/blog.js') }}"></script>
   <script>
