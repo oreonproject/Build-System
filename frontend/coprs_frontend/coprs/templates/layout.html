@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <title>{% block title %}Oreon Build System{% endblock %}</title>
-  <meta charset="utf-8">
+  <meta charset="utf-t">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Modern automated build system for Oreon Linux - Build RPM packages and ISO images with ease">
   
@@ -15,10 +15,9 @@
   <link href="{{ url_for('system_static', component='patternfly', filename='css/patternfly.min.css') }}" rel="stylesheet" media="screen, print">
   <link rel="stylesheet" href="{{ url_for('system_static', component='patternfly', filename='css/patternfly-additions.min.css') }}">
   
-  <!-- Custom Oreon Build System Styles -->
-  <link href="{{ url_for('static', filename='css/monochrome.css') }}" rel="stylesheet" media="screen, print">
-  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='oreon.css') }}">
-  
+  <!-- Clean Monochrome Theme -->
+  <link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet" media="screen, print">
+
   <!-- JavaScript Dependencies -->
   <script src="{{ url_for('system_static', component='jquery', filename='3/jquery.min.js') }}"></script>
   <script src="{{ url_for('system_static', component='jquery-ui', filename='jquery-ui.min.js') }}"></script>
@@ -35,104 +34,78 @@
   {% endif  %}
 
   <!-- MAIN NAVIGATION -->
-  <nav class="oreon-navbar" id="main-bar">
-    <div class="container-fluid">
-      <div class="oreon-brand">
-        <a href="{{ url_for('coprs_ns.coprs_show') }}" class="brand-link">
-          <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" class="brand-logo">
-          <span class="brand-text">Oreon Build System</span>
-        </a>
-      </div>
-      <div class="oreon-nav-controls">
-        <div id="login-menu" class="oreon-login-menu">
-          {% for item in login_menu %}
-          <a href="{{ item.link }}" class="nav-link">{{ item.desc }}</a>
-          {% if not loop.last %}<span class="nav-separator">|</span>{% endif %}
-          {% endfor %}
-        </div>
-        <div class="oreon-search-container">
-          {{ render_search_bar() }}
-        </div>
+  <nav class="navbar navbar-pf" role="navigation">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="{{ url_for('coprs_ns.coprs_show') }}">
+        <img src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" />
+        Oreon Build System
+      </a>
+    </div>
+    <div class="collapse navbar-collapse navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-utility">
+        {% for item in login_menu %}
+        <li><a href="{{ item.link }}">{{ item.desc }}</a></li>
+        {% endfor %}
+      </ul>
+      <div class="navbar-right">
+        {{ render_search_bar() }}
       </div>
     </div>
   </nav>
 
-  <!-- MAIN NAVIGATION TABS -->
-  <div class="oreon-nav-tabs">
-    <div class="container">
-      <nav class="nav nav-tabs oreon-main-nav">
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}" 
-           href="{{ url_for('coprs_ns.coprs_show') }}">
-          Projects
-        </a>
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}" 
-           href="{{ url_for('iso_ns.iso_index') }}">
-          ISO Builder
-        </a>
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}" 
-           href="{{ url_for('status_ns.importing') }}">
-          Build Queue
-        </a>
-      </nav>
-    </div>
-  </div>
+  <div class="container-fluid">
+      <ul class="nav nav-tabs">
+          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
+              <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
+          </li>
+          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
+              <a href="{{ url_for('iso_ns.iso_index') }}">ISO Builder</a>
+          </li>
+          <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
+              <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
+          </li>
+      </ul>
 
-  <!-- BREADCRUMB NAVIGATION -->
-  <div class="oreon-breadcrumb-panel">
-    <div class="container">
-        {% block breadcrumbs %}
-        {% endblock %}
-    </div>
-  </div>
+      <!-- BREADCRUMB NAVIGATION -->
+      {% block breadcrumbs %}
+      {% endblock %}
 
-  <!-- MAIN CONTENT -->
-  <div id="content" class="oreon-main-content">
-    <div class="container">
-
-      <!-- Flash Messages with Modern Styling -->
-      {% if flashes %}
-        {% for type, message in flashes %}
-          {{ alert(message, type) }}
-        {% endfor %}
-      {% else %}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% for type, message in messages %}
+      <!-- MAIN CONTENT -->
+      <div id="content">
+        <!-- Flash Messages -->
+        {% if flashes %}
+          {% for type, message in flashes %}
             {{ alert(message, type) }}
           {% endfor %}
-        {% endwith %}
-      {% endif %}
+        {% else %}
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for type, message in messages %}
+              {{ alert(message, type) }}
+            {% endfor %}
+          {% endwith %}
+        {% endif %}
 
-      <!-- Page Content -->
-      {% block body %}{% endblock %}
-
-    </div>
+        <!-- Page Content -->
+        {% block body %}{% endblock %}
+      </div>
   </div>
 
-  <!-- MODERN FOOTER -->
-  <footer class="oreon-footer">
+
+  <!-- FOOTER -->
+  <footer class="footer">
     <div class="container">
-      <div class="footer-content">
-        <div class="row">
-          <div class="col-sm-12">
-            <div class="footer-section">
-              <ul class="footer-links">
-                <li><a href="{{ url_for('coprs_ns.coprs_show') }}">Dashboard</a></li>
-                <li><a href="{{url_for('status_ns.importing')}}">Build Queue</a></li>
-                <li><a href="{{ url_for('api_ns.api_home') }}">API Documentation</a></li>
-                <li><a href="{{ url_for('user_ns.user_info') }}">Privacy Policy</a></li>
-                <li><a href="https://docs.oreon-linux.org">Documentation</a></li>
-                <li><a href="/db_dumps/">Database Dumps</a></li>
-                <li><a href="https://github.com/oreon-linux/oreon-build-system">Source Code</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <div class="row">
-            <div class="col-md-12">
-              <p class="footer-copyright">© 2024 Oreon Linux Project. All rights reserved.</p>
-            </div>
-          </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <p class="text-center">
+            <a href="{{ url_for('coprs_ns.coprs_show') }}">Dashboard</a> |
+            <a href="{{url_for('status_ns.importing')}}">Build Queue</a> |
+            <a href="{{ url_for('api_ns.api_home') }}">API Documentation</a> |
+            <a href="{{ url_for('user_ns.user_info') }}">Privacy Policy</a> |
+            <a href="https://docs.oreon-linux.org">Documentation</a> |
+            <a href="/db_dumps/">Database Dumps</a> |
+            <a href="https://github.com/oreon-linux/oreon-build-system">Source Code</a>
+          </p>
+          <p class="text-center">© 2024 Oreon Linux Project. All rights reserved.</p>
         </div>
       </div>
     </div>
