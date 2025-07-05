@@ -1,6 +1,35 @@
 #! /bin/sh
 
 cd /usr/share/copr/coprs_frontend/
+
+# Initialize database
 ./manage.py create-db --alembic alembic.ini
+
+# Create default chroots
 ./manage.py create-chroot fedora-rawhide-x86_64
+
+# Initialize Oreon Build System local authentication
+python3 -c "
+import sys
+sys.path.insert(0, '/usr/share/copr')
+
+# Initialize local authentication
+from local_auth import init_local_auth
+from local_routes import register_local_auth_routes
+import auth_patch
+
+from coprs import app, db
+
+with app.app_context():
+    # Register local auth routes
+    register_local_auth_routes(app)
+    
+    # Initialize database and create admin user
+    init_local_auth()
+    
+    print('Oreon Build System local authentication initialized')
+    print('Default admin user: admin')
+    print('Access the system at http://localhost:5000')
+"
+
 exec /usr/sbin/httpd -DFOREGROUND

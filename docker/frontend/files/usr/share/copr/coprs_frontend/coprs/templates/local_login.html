@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Login - Oreon Build System{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="oreon-card oreon-fade-in">
+                <div class="oreon-card-header">
+                    <h3 class="oreon-card-title">
+                        <i class="fa fa-sign-in"></i> Login to Oreon Build System
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <form method="POST" id="login-form">
+                        <div class="oreon-form-group">
+                            <label for="username" class="oreon-form-label">Username:</label>
+                            <input type="text" 
+                                   class="oreon-form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Enter your username"
+                                   required
+                                   autofocus
+                                   pattern="[a-zA-Z0-9_-]{3,30}">
+                            <small class="help-block">
+                                <strong>Local Authentication:</strong> Enter any username to login. 
+                                If this is your first time, an account will be created automatically.
+                                <br><br>
+                                <strong>Requirements:</strong>
+                                <ul style="margin: 10px 0;">
+                                    <li>3-30 characters long</li>
+                                    <li>Letters, numbers, hyphens (-), and underscores (_) only</li>
+                                </ul>
+                            </small>
+                        </div>
+                        <button type="submit" class="oreon-btn oreon-btn-primary">
+                            <i class="fa fa-sign-in"></i> Login / Create Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center" style="margin-top: 30px;">
+                <div class="oreon-card" style="padding: 20px;">
+                    <h4 style="color: var(--oreon-primary); margin-bottom: 15px;">
+                        <i class="fa fa-info-circle"></i> About Local Authentication
+                    </h4>
+                    <p class="text-muted">
+                        Oreon Build System uses local authentication for simplicity and privacy.
+                        No external accounts or complex registration process required.
+                    </p>
+                    <p class="text-muted">
+                        <strong>Features:</strong>
+                    </p>
+                    <ul class="text-muted" style="text-align: left; display: inline-block;">
+                        <li>Instant account creation</li>
+                        <li>No email verification needed</li>
+                        <li>Local data storage</li>
+                        <li>Full build system access</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('login-form');
+    const usernameInput = document.getElementById('username');
+    
+    // Add real-time validation
+    usernameInput.addEventListener('input', function() {
+        const value = this.value;
+        const valid = /^[a-zA-Z0-9_-]{3,30}$/.test(value);
+        
+        if (value.length > 0) {
+            if (valid) {
+                this.style.borderColor = 'var(--oreon-success)';
+            } else {
+                this.style.borderColor = 'var(--oreon-danger)';
+            }
+        } else {
+            this.style.borderColor = '';
+        }
+    });
+    
+    // Focus effect
+    usernameInput.focus();
+});
+</script>
+{% endblock %} 
