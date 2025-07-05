@@ -41,7 +41,7 @@ RUN chown copr-dist-git:copr-dist-git /var/lock/copr-dist-git/
 COPY files/ /
 RUN chmod 644 /etc/copr/copr-dist-git.conf
 
-RUN getent passwd copr-dist-git && \
+RUN systemd-sysusers /usr/lib/sysusers.d/copr-dist-git.conf && \
     mkdir -p /home/copr-dist-git && \
     echo "[user]" > /home/copr-dist-git/.gitconfig && \
     echo "    email = buildsystem@oreonproject.org" >> /home/copr-dist-git/.gitconfig && \
