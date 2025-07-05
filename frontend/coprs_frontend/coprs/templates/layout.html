@@ -37,28 +37,21 @@
   <!-- MAIN NAVIGATION -->
   <nav class="oreon-navbar" id="main-bar">
     <div class="container-fluid">
-      <div class="row align-items-center">
-        <div class="col-md-8 col-sm-7 col-xs-6">
-          <div class="oreon-brand">
-            <a href="{{ url_for('coprs_ns.coprs_show') }}" class="brand-link">
-              <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" class="brand-logo">
-              <span class="brand-text">Oreon Build System</span>
-            </a>
-            <span class="brand-tagline">Modern Package & ISO Builder</span>
-          </div>
+      <div class="oreon-brand">
+        <a href="{{ url_for('coprs_ns.coprs_show') }}" class="brand-link">
+          <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" class="brand-logo">
+          <span class="brand-text">Oreon Build System</span>
+        </a>
+      </div>
+      <div class="oreon-nav-controls">
+        <div id="login-menu" class="oreon-login-menu">
+          {% for item in login_menu %}
+          <a href="{{ item.link }}" class="nav-link">{{ item.desc }}</a>
+          {% if not loop.last %}<span class="nav-separator">|</span>{% endif %}
+          {% endfor %}
         </div>
-        <div class="col-md-4 col-sm-5 col-xs-6">
-          <div class="oreon-nav-controls">
-            <div id="login-menu" class="oreon-login-menu">
-              {% for item in login_menu %}
-              <a href="{{ item.link }}" class="nav-link">{{ item.desc }}</a>
-              {% if not loop.last %}<span class="nav-separator">|</span>{% endif %}
-              {% endfor %}
-            </div>
-            <div class="oreon-search-container">
-              {{ render_search_bar() }}
-            </div>
-          </div>
+        <div class="oreon-search-container">
+          {{ render_search_bar() }}
         </div>
       </div>
     </div>
@@ -70,15 +63,15 @@
       <nav class="nav nav-tabs oreon-main-nav">
         <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}" 
            href="{{ url_for('coprs_ns.coprs_show') }}">
-          <i class="fa fa-cube"></i> Projects
+          Projects
         </a>
         <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}" 
            href="{{ url_for('iso_ns.iso_index') }}">
-          <i class="fa fa-compact-disc"></i> ISO Builder
+          ISO Builder
         </a>
         <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}" 
            href="{{ url_for('status_ns.importing') }}">
-          <i class="fa fa-list"></i> Build Queue
+          Build Queue
         </a>
       </nav>
     </div>
@@ -120,61 +113,24 @@
     <div class="container">
       <div class="footer-content">
         <div class="row">
-          <div class="col-sm-3">
+          <div class="col-sm-12">
             <div class="footer-section">
-              <h4 class="footer-title">Quick Links</h4>
               <ul class="footer-links">
                 <li><a href="{{ url_for('coprs_ns.coprs_show') }}">Dashboard</a></li>
                 <li><a href="{{url_for('status_ns.importing')}}">Build Queue</a></li>
                 <li><a href="{{ url_for('api_ns.api_home') }}">API Documentation</a></li>
                 <li><a href="{{ url_for('user_ns.user_info') }}">Privacy Policy</a></li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="footer-section">
-              <h4 class="footer-title">Build Tools</h4>
-              <ul class="footer-links">
-                <li><a href="/packages/new">Package Builder</a></li>
-                <li><a href="/iso/new">ISO Builder</a></li>
-                <li><a href="/projects/batch">Mass Build</a></li>
-                <li><a href="{{ url_for('rss_ns.rss') }}">RSS Feed</a></li>
-              </ul>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="footer-section">
-              <h4 class="footer-title">Resources</h4>
-              <ul class="footer-links">
                 <li><a href="https://docs.oreon-linux.org">Documentation</a></li>
                 <li><a href="/db_dumps/">Database Dumps</a></li>
-                {% if config.BACKEND_STATS_URI %}
-                <li><a href="{{ config.BACKEND_BASE_URL }}{{ config.BACKEND_STATS_URI }}">Storage Statistics</a></li>
-                {% endif %}
                 <li><a href="https://github.com/oreon-linux/oreon-build-system">Source Code</a></li>
               </ul>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="footer-section">
-              <h4 class="footer-title">Powered By</h4>
-              <ul class="footer-links">
-                <li><a href="https://www.python.org">Python</a></li>
-                <li><a href="https://flask.palletsprojects.com/">Flask</a></li>
-                <li><a href="https://github.com/rpm-software-management/mock">Mock</a></li>
-                <li><a href="https://github.com/weldr/lorax">Lorax</a></li>
-              </ul>
-            </div>
-          </div>
         </div>
-        
         <div class="footer-bottom">
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-12">
               <p class="footer-copyright">© 2024 Oreon Linux Project. All rights reserved.</p>
-            </div>
-            <div class="col-md-6 text-right">
-              <p class="footer-tagline">Building the future of Linux distributions</p>
             </div>
           </div>
         </div>

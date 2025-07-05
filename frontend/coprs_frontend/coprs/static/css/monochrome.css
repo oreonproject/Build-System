@@ -1,22 +1,24 @@
-/* Strict Monochrome Theme */
-body, .oreon-body, .oreon-main-content, .oreon-footer {
+/* ABSOLUTE MONOCHROME OVERRIDES */
+html, body, .oreon-body, .oreon-main-content, .oreon-footer, .container, .container-fluid, .row, .col-md-*, .col-sm-*, .col-xs-*, .panel, .panel-body, .panel-heading, .panel-default, .footer-section, .footer-bottom, .oreon-navbar, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active, .navbar, .navbar-default, .navbar-header, .navbar-nav, .navbar-collapse, .navbar-brand, .nav, .nav-tabs, .nav-link, .btn, .form-control, .dropdown-menu, .dropdown, .dropdown-item, .dropdown-toggle, .oreon-search-container, .oreon-login-menu, .footer-links, .footer-title, .footer-tagline, .footer-copyright, .brand-tagline, .brand-text, .panel-title, .panel-default, .panel-heading, .panel-body, .panel-footer, .breadcrumb, .alert, .list-group-item, .list-group, .table, .table-striped, .table-bordered, .table-hover, .table-responsive, .oreon-main-content, .oreon-footer, .oreon-navbar, .oreon-nav-tabs, .oreon-main-nav, .oreon-nav-tabs .nav-link, .oreon-nav-tabs .nav-link.active, .oreon-nav-tabs .nav-link:hover, .oreon-navbar .nav-link, .oreon-navbar .nav-link:hover, .footer-links a, .footer-links a:hover, .brand-text, .oreon-navbar a, .oreon-nav-controls a, .oreon-navbar .nav-link, .oreon-navbar .nav-link:hover, .footer-links a, .footer-links a:hover, .brand-text, .oreon-navbar a, .oreon-nav-controls a {
   background: #fff !important;
   color: #000 !important;
-  font-family: Arial, Helvetica, sans-serif;
-  box-shadow: none !important;
-}
-
-.oreon-navbar, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active, .panel, .panel-heading, .footer-section, .footer-bottom {
-  background: #000 !important;
-  color: #fff !important;
   border: none !important;
   box-shadow: none !important;
+  border-radius: 0 !important;
+  text-shadow: none !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.oreon-navbar, .navbar, .navbar-default, .oreon-nav-tabs, .oreon-nav-tabs .nav-link.active, .panel, .panel-heading, .footer-section, .footer-bottom {
+  background: #000 !important;
+  color: #fff !important;
 }
 
 .oreon-navbar .nav-link, .oreon-nav-tabs .nav-link, .footer-links a, .brand-text, .oreon-navbar a, .oreon-nav-controls a {
   color: #fff !important;
   background: none !important;
-  text-shadow: none !important;
 }
 
 .oreon-navbar .nav-link:hover, .oreon-nav-tabs .nav-link:hover, .footer-links a:hover {
@@ -24,32 +26,55 @@ body, .oreon-body, .oreon-main-content, .oreon-footer {
 }
 
 .brand-logo {
-  height: 40px;
+  height: 36px;
   width: auto;
   margin-right: 10px;
   vertical-align: middle;
   background: none !important;
   box-shadow: none !important;
+  display: inline-block;
 }
 
-.brand-tagline, .footer-tagline, .footer-title, .footer-copyright {
-  color: #000 !important;
-  background: none !important;
+.brand-text {
+  color: #fff !important;
+  font-weight: bold;
+  font-size: 1.2em;
+  vertical-align: middle;
+  display: inline-block;
 }
 
-.panel, .panel-heading, .panel-default, .panel-title, .panel-body {
+.oreon-navbar, .navbar, .navbar-default {
+  height: 48px;
+  min-height: 48px;
+  line-height: 48px;
+  padding: 0 16px !important;
+  display: flex;
+  align-items: center;
+}
+
+.oreon-brand {
+  display: flex;
+  align-items: center;
+}
+
+.oreon-nav-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.oreon-login-menu {
+  margin-left: 16px;
+}
+
+.oreon-search-container input, .oreon-search-container button {
   background: #fff !important;
   color: #000 !important;
   border: 1px solid #000 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-}
-
-input, select, textarea, .form-control {
-  background: #fff !important;
-  color: #000 !important;
-  border: 1px solid #000 !important;
-  border-radius: 0 !important;
+  padding: 2px 6px !important;
+  font-size: 1em !important;
 }
 
 .btn, .nav-link, .oreon-search-container input, .oreon-search-container button {
@@ -58,6 +83,8 @@ input, select, textarea, .form-control {
   border: 1px solid #000 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  font-size: 1em !important;
+  padding: 2px 8px !important;
 }
 
 .btn:hover, .nav-link:hover, .oreon-search-container input:hover, .oreon-search-container button:hover {
@@ -65,10 +92,9 @@ input, select, textarea, .form-control {
   color: #000 !important;
 }
 
-a { color: #000 !important; }
+a { color: #000 !important; text-decoration: underline !important; }
 a:hover { color: #555 !important; }
 
-/* Remove all colored icons */
 .fa, .pficon, .glyphicon {
   color: #000 !important;
 }
@@ -79,23 +105,52 @@ a:hover { color: #555 !important; }
   box-shadow: none !important;
 }
 
-/* Remove any remaining purple/blue backgrounds */
 body::before, .oreon-main-content::before, .oreon-footer::before {
   background: none !important;
   content: none !important;
 }
 
-/* Remove floating card look */
 .oreon-main-content, .panel, .panel-default {
   margin: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  border: 1px solid #000 !important;
 }
 
-/* Remove extra padding/margins */
 .container, .container-fluid, .row, .col-md-*, .col-sm-*, .col-xs-*, .panel, .panel-body {
   padding: 0 !important;
   margin: 0 !important;
 }
 
-/* Make everything flat and minimal */ 
+/* Remove all floating cards, gradients, and color accents */
+.panel, .panel-heading, .panel-body, .panel-footer, .alert, .list-group-item, .list-group, .table, .table-striped, .table-bordered, .table-hover, .table-responsive {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Remove all purple, blue, and color references from Bootstrap */
+.bg-primary, .bg-success, .bg-info, .bg-warning, .bg-danger, .bg-light, .bg-dark, .bg-secondary, .bg-white, .bg-black, .bg-blue, .bg-purple, .bg-indigo, .bg-pink, .bg-red, .bg-yellow, .bg-green, .bg-cyan, .bg-teal, .bg-orange, .bg-brown, .bg-gray, .bg-grey {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+.text-primary, .text-success, .text-info, .text-warning, .text-danger, .text-light, .text-dark, .text-secondary, .text-white, .text-black, .text-blue, .text-purple, .text-indigo, .text-pink, .text-red, .text-yellow, .text-green, .text-cyan, .text-teal, .text-orange, .text-brown, .text-gray, .text-grey {
+  color: #000 !important;
+}
+
+/* Remove all icons and colored elements from nav and panels */
+.fa, .pficon, .glyphicon {
+  color: #000 !important;
+  background: none !important;
+}
+
+/* Remove all extra spacing and floating effects */
+* {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Make everything flat, minimal, and aligned */ 
