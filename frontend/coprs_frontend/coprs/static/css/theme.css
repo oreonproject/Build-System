@@ -1,14 +1,28 @@
 /* Oreon Theme Overrides */
 
-/* Fix purple link color */
-a {
+/* Set all link colors to black */
+a,
+a:hover,
+a:focus,
+.text-primary {
   color: #000000;
 }
 
-/* Fix button and active element colors */
+/* Set primary buttons to black */
 .btn-primary {
+  color: #ffffff;
   background-color: #000000;
   border-color: #000000;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open .dropdown-toggle.btn-primary {
+  color: #ffffff;
+  background-color: #333333; /* Darker gray for hover */
+  border-color: #333333;
 }
 
 .nav-tabs > li.active > a,
