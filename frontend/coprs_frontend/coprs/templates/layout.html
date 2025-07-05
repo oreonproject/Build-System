@@ -24,66 +24,71 @@
       {{ copr_banner | safe }}
   {% endif  %}
 
-  <!-- MAIN NAVIGATION -->
-    <nav class="navbar navbar-pf" role="navigation">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="{{ url_for('coprs_ns.coprs_show') }}">
-          <img src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" style="height:30px;" />
-        </a>
-      </div>
-      <div class="collapse navbar-collapse navbar-collapse-1">
-        <ul class="nav navbar-nav navbar-primary">
-            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
-                <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
-            </li>
-            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
-                <a href="{{ url_for('iso_ns.iso_index') }}"><i class="pficon pficon-image"></i> ISO Builder</a>
-            </li>
-            <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
-                <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
-            </li>
-        </ul>
-        <ul class="nav navbar-nav navbar-utility">
-          {% for item in login_menu %}
-          <li><a href="{{ item.link }}">{{ item.desc }}</a></li>
-          {% endfor %}
-        </ul>
-        <div class="navbar-right">
+  <!-- MAIN MENU -->
+  <nav class="" id="main-bar">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 col-sm-7 col-xs-6">
+          <a href="{{ url_for('coprs_ns.coprs_show') }}">
+            <img id="logo" src="{{ url_for('static', filename='copr-logo-transparent.png') }}" alt="Oreon Build System" style="height: 30px; vertical-align: middle; margin-right: 10px;">
+            <span style="vertical-align: middle; font-size: 18px; font-weight: bold;">Oreon Build System</span>
+          </a>
+        </div>
+        <div class="col-md-4 col-sm-5 col-xs-6">
+          <div id="login-menu" class="text-right">
+            {% for item in login_menu %}
+            <a href="{{ item.link }}">{{ item.desc }}</a>
+            {% if not loop.last %}|{% endif %}
+            {% endfor %}
+          </div>
           {{ render_search_bar() }}
         </div>
       </div>
-    </nav>
+    </div>
+  </nav>
+  <div class="container">
+    <ul class="nav nav-tabs">
+        <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('coprs_ns') else '' }}">
+            <a href="{{ url_for('coprs_ns.coprs_show') }}">Projects</a>
+        </li>
+        <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}">
+            <a href="{{ url_for('iso_ns.iso_index') }}"><i class="pficon pficon-image"></i> ISO Builder</a>
+        </li>
+        <li class="{{ 'active' if request.endpoint and request.endpoint.startswith('status_ns') else '' }}">
+            <a href="{{ url_for('status_ns.importing') }}">Build Queue</a>
+        </li>
+    </ul>
+  </div>
+
+  <div class="breadcrumb-panel">
+    <div class="container">
+        {% block breadcrumbs %}
+        {% endblock %}
+    </div>
+  </div>
 
   <!-- CONTENT -->
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-sm-12">
-          <!-- BREADCRUMB NAVIGATION -->
-          {% block breadcrumbs %}
-          {% endblock %}
+  <div id=content>
+    <div class="container">
 
-          <!-- MAIN CONTENT -->
-          <div id="content">
-            <!-- Flash messages -->
-            {% if flashes %}
-              {% for type, message in flashes %}
-                {{ alert(message, type) }}
-              {% endfor %}
-            {% else %}
-              {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for type, message in messages %}
-                  {{ alert(message, type) }}
-                {% endfor %}
-              {% endwith %}
-            {% endif %}
+      <!-- Flash messages -->
+      {% if flashes %}
+        {% for type, message in flashes %}
+          {{ alert(message, type) }}
+        {% endfor %}
+      {% else %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for type, message in messages %}
+            {{ alert(message, type) }}
+          {% endfor %}
+        {% endwith %}
+      {% endif %}
 
 
 
-            <!-- the actual content -->
-            {% block body %}{% endblock %}
+      <!-- the actual content -->
+      {% block body %}{% endblock %}
 
-          </div>
-      </div>
     </div>
     <footer class="footer">
       <div>
