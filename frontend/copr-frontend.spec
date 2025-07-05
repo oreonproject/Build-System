@@ -142,6 +142,7 @@ Requires: python3dist(python-dateutil)
 Requires: python3dist(email-validator)
 Requires: python3dist(flask)
 Requires: python3dist(flask-caching)
+Requires: python3dist(flask-login)
 Requires: python3dist(flask-openid)
 Requires: python3dist(flask-sqlalchemy)
 Requires: python3dist(flask-session)
@@ -177,6 +178,11 @@ Requires: js-jquery-ui
 Requires: python3dist(xstatic-patternfly)
 Requires: modulemd-tools >= 0.6
 Requires: python3dist(authlib)
+Requires: python3dist(flask-login)
+Requires: python3dist(flask-caching)
+Requires: python3dist(flask-login)
+Requires: python3dist(flask-openid)
+Requires: python3dist(flask-sqlalchemy)
 
 Provides: bundled(bootstrap-combobox) = 1.1.6
 Provides: bundled(bootstrap-select) = 1.5.4
