@@ -75,10 +75,6 @@
            href="{{ url_for('coprs_ns.coprs_show') }}">
           <i class="fa fa-cube"></i> Projects
         </a>
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('recent_ns') else '' }}" 
-           href="{{ url_for('recent_ns.recent_builds') }}">
-          <i class="fa fa-clock-o"></i> Recent Builds
-        </a>
         <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('iso_ns') else '' }}" 
            href="{{ url_for('iso_ns.iso_index') }}">
           <i class="fa fa-compact-disc"></i> ISO Builder
