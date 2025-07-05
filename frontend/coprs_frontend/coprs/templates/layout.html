@@ -83,10 +83,6 @@
            href="{{ url_for('status_ns.importing') }}">
           <i class="fa fa-list"></i> Build Queue
         </a>
-        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('stats_ns') else '' }}" 
-           href="{{ url_for('stats_ns.stats') }}">
-          <i class="fa fa-bar-chart"></i> Statistics
-        </a>
       </nav>
     </div>
   </div>
