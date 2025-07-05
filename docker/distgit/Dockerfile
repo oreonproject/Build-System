@@ -24,6 +24,12 @@ RUN set -ex ; \
     dnf -y install dist-git && \
     dnf clean all
 
+# Create users and groups needed for the service
+RUN groupadd -r packager 2>/dev/null || true && \
+    groupadd -r apache 2>/dev/null || true && \
+    groupadd -r copr-dist-git && \
+    useradd -r -g copr-dist-git -G packager,apache -c 'copr-dist-git user' -d /home/copr-dist-git -s /bin/bash copr-dist-git
+
 RUN rm /etc/httpd/conf.d/ssl.conf
 
 RUN echo "AliasMatch \"/repo(/.*)/md5(/.*)\" \"/var/lib/dist-git/cache/lookaside\\$1\\$2\"" >> /etc/httpd/conf.d/dist-git/lookaside-copr.conf && \
@@ -41,11 +47,7 @@ RUN chown copr-dist-git:copr-dist-git /var/lock/copr-dist-git/
 COPY files/ /
 RUN chmod 644 /etc/copr/copr-dist-git.conf
 
-RUN groupadd -r packager 2>/dev/null || true && \
-    groupadd -r apache 2>/dev/null || true && \
-    groupadd -r copr-dist-git && \
-    useradd -r -g copr-dist-git -G packager,apache -c 'copr-dist-git user' -d /home/copr-dist-git -s /bin/bash copr-dist-git && \
-    mkdir -p /home/copr-dist-git && \
+RUN mkdir -p /home/copr-dist-git && \
     echo "[user]" > /home/copr-dist-git/.gitconfig && \
     echo "    email = buildsystem@oreonproject.org" >> /home/copr-dist-git/.gitconfig && \
     echo "    name = Copr dist git" >> /home/copr-dist-git/.gitconfig && \
